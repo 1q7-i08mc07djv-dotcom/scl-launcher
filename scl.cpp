@@ -1,8 +1,6 @@
 /*
  * SCL - SUPER CRAFT LAUNCHER
- * Minecraft启动器 - C++ Win32原生版本
- * 
- * 编译: cl /EHsc /O2 /Fe:SCL.exe scl.cpp winhttp.lib comctl32.lib shlwapi.lib
+ * Minecraft Launcher - C++ Win32 Native Version
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -23,12 +21,12 @@
 
 using namespace std;
 
-// ==================== 配置 ====================
+// ==================== Config ====================
 #define APP_TITLE L"SCL - SUPER CRAFT LAUNCHER"
 #define WINDOW_W 900
 #define WINDOW_H 620
 
-// 控件ID
+// Control IDs
 #define ID_LIST_VERSIONS 1001
 #define ID_LIST_ACCOUNTS 1002
 #define ID_BTN_LOGIN 2001
@@ -40,7 +38,7 @@ using namespace std;
 #define ID_STATUS 4001
 #define ID_PROGRESS 4002
 
-// 镜像源
+// Mirrors
 const wchar_t* MIRRORS[] = {
     L"https://bmclapi2.bangbang93.com",
     L"https://download.mcbbs.net",
@@ -48,22 +46,18 @@ const wchar_t* MIRRORS[] = {
 };
 int g_mirrorIdx = 0;
 
-// 配色
+// Colors
 #define CLR_BG RGB(26, 26, 46)
-#define CLR_CARD RGB(22, 33, 62)
-#define CLR_ACCENT RGB(30, 136, 229)
-#define CLR_RED RGB(233, 69, 96)
 #define CLR_TEXT RGB(255, 255, 255)
 #define CLR_TEXT_DIM RGB(176, 176, 176)
-#define CLR_GREEN RGB(76, 175, 80)
 
-// 全局变量
+// Globals
 HWND g_hMain, g_hStatus, g_hProgress, g_hVersionList, g_hAccountList;
 wstring g_gameDir, g_configDir;
 vector<wstring> g_versions;
 vector<wstring> g_accounts;
 
-// ==================== 工具函数 ====================
+// ==================== Utils ====================
 wstring GetAppData() {
     wchar_t p[MAX_PATH];
     SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, p);
@@ -114,16 +108,16 @@ wstring GenUUID(const wstring& name) {
         h[i % 4] = h[i % 4] * 31 + (unsigned)input[i];
     }
     wchar_t uuid[64];
-    swprintf_s(uuid, L"%08x%04x%04x%04x%04x%08x%04x",
+    wsprintfW(uuid, L"%08x%04x%04x%04x%04x%08x%04x",
         h[0] & 0xffffffff, (h[1] >> 16) & 0xffff, (h[1] & 0xffff) | 0x4000,
         ((h[2] >> 16) & 0x3fff) | 0x8000, h[2] & 0xffff,
         h[3] & 0xffff, (h[0] >> 16) & 0xffff);
     return wstring(uuid);
 }
 
-// ==================== 网络请求 ====================
+// ==================== Network ====================
 bool HttpDownload(const wstring& url, const wstring& path) {
-    URL_COMPONENTS uc = {sizeof(uc)};
+    URL_COMPONENTSW uc = { sizeof(uc) };
     wchar_t host[256] = {0}, pathb[2048] = {0};
     uc.lpszHostName = host;
     uc.lpszUrlPath = pathb;
@@ -170,7 +164,7 @@ bool HttpDownload(const wstring& url, const wstring& path) {
 }
 
 string HttpGet(const wstring& url) {
-    URL_COMPONENTS uc = {sizeof(uc)};
+    URL_COMPONENTSW uc = { sizeof(uc) };
     wchar_t host[256] = {0}, pathb[2048] = {0};
     uc.lpszHostName = host;
     uc.lpszUrlPath = pathb;
@@ -204,11 +198,11 @@ string HttpGet(const wstring& url) {
     return res;
 }
 
-// ==================== 版本管理 ====================
+// ==================== Version Manager ====================
 void LoadVersions() {
     g_versions.clear();
     SendMessageW(g_hVersionList, LB_RESETCONTENT, 0, 0);
-    SetStatus(L"正在获取版本列表...");
+    SetStatus(L"Loading version list...");
     
     wstring url = wstring(MIRRORS[g_mirrorIdx]) + L"/mc/game/version_manifest_v2.json";
     string json = HttpGet(url);
@@ -223,7 +217,7 @@ void LoadVersions() {
     }
     
     if (json.empty()) {
-        SetStatus(L"获取版本列表失败!");
+        SetStatus(L"Failed to load versions!");
         return;
     }
     
@@ -235,18 +229,21 @@ void LoadVersions() {
         wstring id = Utf8ToWide(json.substr(p, e - p));
         g_versions.push_back(id);
         
-        wstring display = id + (DirExists(g_gameDir + L"\\versions\\" + id) ? L" [已安装]" : L"");
+        wstring display = id;
+        if (DirExists(g_gameDir + L"\\versions\\" + id)) {
+            display += L" [Installed]";
+        }
         SendMessageW(g_hVersionList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
     }
     
     wchar_t msg[256];
-    swprintf_s(msg, L"已加载 %d 个版本", g_versions.size());
+    wsprintfW(msg, L"Loaded %d versions", g_versions.size());
     SetStatus(msg);
 }
 
 bool InstallVersion(const wstring& ver) {
     wchar_t msg[256];
-    swprintf_s(msg, L"安装版本: %s", ver.c_str());
+    wsprintfW(msg, L"Installing: %s", ver.c_str());
     SetStatus(msg);
     
     wstring vdir = g_gameDir + L"\\versions\\" + ver;
@@ -256,7 +253,7 @@ bool InstallVersion(const wstring& ver) {
     wstring jsonPath = vdir + L"\\" + ver + L".json";
     
     if (!HttpDownload(jsonUrl, jsonPath)) {
-        SetStatus(L"下载失败!");
+        SetStatus(L"Download failed!");
         return false;
     }
     
@@ -275,19 +272,19 @@ bool InstallVersion(const wstring& ver) {
             string jarUrl = json.substr(up, ue - up);
             size_t pos = jarUrl.find("https://launchermeta.mojang.com");
             if (pos != string::npos) {
-                jarUrl.replace(pos, 33, WideToUtf8(MIRRORS[g_mirrorIdx]));
+                jarUrl.replace(pos, 33, WideToUtf8(wstring(MIRRORS[g_mirrorIdx])));
             }
             HttpDownload(Utf8ToWide(jarUrl), vdir + L"\\" + ver + L".jar");
         }
     }
     
     LoadVersions();
-    swprintf_s(msg, L"版本 %s 安装完成!", ver.c_str());
+    wsprintfW(msg, L"Version %s installed!", ver.c_str());
     SetStatus(msg);
     return true;
 }
 
-// ==================== 账户管理 ====================
+// ==================== Account Manager ====================
 void LoadAccounts() {
     g_accounts.clear();
     SendMessageW(g_hAccountList, LB_RESETCONTENT, 0, 0);
@@ -317,35 +314,35 @@ void AddAccount(const wstring& name) {
         f.close();
     }
     wchar_t msg[256];
-    swprintf_s(msg, L"已添加账户: %s", name.c_str());
+    wsprintfW(msg, L"Account added: %s", name.c_str());
     SetStatus(msg);
     LoadAccounts();
 }
 
-// ==================== 游戏启动 ====================
+// ==================== Game Launcher ====================
 bool LaunchGame(const wstring& ver) {
     if (g_accounts.empty()) {
-        SetStatus(L"请先添加账户!");
+        SetStatus(L"Please add an account first!");
         return false;
     }
     
     wstring vdir = g_gameDir + L"\\versions\\" + ver;
     if (!DirExists(vdir)) {
-        SetStatus(L"版本未安装!");
+        SetStatus(L"Version not installed!");
         return false;
     }
     
     wstring java = g_gameDir + L"\\runtime\\java\\bin\\java.exe";
-    if (!DirExists(java.substr(0, java.rfind(L'\\')))) {
+    if (!DirExists(java.substr(0, java.rfind(L'\\'))) {
         wchar_t jh[MAX_PATH];
         if (GetEnvironmentVariableW(L"JAVA_HOME", jh, MAX_PATH)) {
             java = wstring(jh) + L"\\bin\\java.exe";
         }
     }
     
-    if (!DirExists(java.substr(0, java.rfind(L'\\')))) {
-        SetStatus(L"未找到Java! 请安装JDK 21");
-        MessageBoxW(g_hMain, L"未找到Java运行环境!\n\n请安装 JDK 21:\nhttps://adoptium.net/", L"错误", MB_ICONERROR);
+    if (!DirExists(java.substr(0, java.rfind(L'\\'))) {
+        SetStatus(L"Java not found! Install JDK 21");
+        MessageBoxW(g_hMain, L"Java not found!\nInstall JDK 21: https://adoptium.net/", L"Error", MB_ICONERROR);
         return false;
     }
     
@@ -360,58 +357,55 @@ bool LaunchGame(const wstring& ver) {
     cmd += L"--gameDir \"" + g_gameDir + L"\" ";
     cmd += L"--width 854 --height 480";
     
-    SetStatus(L"启动游戏...");
+    SetStatus(L"Launching game...");
     
-    STARTUPINFOW si = {sizeof(si)};
+    STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
     
     if (CreateProcessW(NULL, &cmd[0], NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, g_gameDir.c_str(), &si, &pi)) {
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
-        SetStatus(L"游戏已启动!");
+        SetStatus(L"Game launched!");
         return true;
     }
     
-    SetStatus(L"启动失败!");
+    SetStatus(L"Launch failed!");
     return false;
 }
 
-// ==================== 窗口回调 ====================
+// ==================== Window Proc ====================
 LRESULT CALLBACK WndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     switch (m) {
         case WM_CREATE: {
-            // 标题
             CreateWindowW(L"Static", L"SCL",
-                WS_CHILD | WS_VISIBLE | SS_CENTER,
+                WS_CHILD | WS_VISIBLE,
                 20, 10, 200, 40, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Static", L"Minecraft启动器",
+            CreateWindowW(L"Static", L"Minecraft Launcher",
                 WS_CHILD | WS_VISIBLE,
                 20, 45, 200, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 左侧 - 账户管理
-            CreateWindowW(L"Static", L"账户管理",
+            CreateWindowW(L"Static", L"Accounts:",
                 WS_CHILD | WS_VISIBLE,
-                20, 80, 200, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
+                20, 80, 100, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
             g_hAccountList = CreateWindowW(L"ListBox", L"",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
                 20, 100, 230, 200, h, (HMENU)ID_LIST_ACCOUNTS, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Static", L"用户名:",
+            CreateWindowW(L"Static", L"Username:",
                 WS_CHILD | WS_VISIBLE,
-                20, 310, 60, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
+                20, 310, 70, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
             CreateWindowW(L"Edit", L"",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                80, 308, 150, 25, h, (HMENU)ID_EDIT_NAME, ((LPCREATESTRUCT)l)->hInstance, NULL);
+                90, 308, 150, 25, h, (HMENU)ID_EDIT_NAME, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Button", L"添加离线账户",
+            CreateWindowW(L"Button", L"Add Offline Account",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 340, 230, 30, h, (HMENU)ID_BTN_LOGIN, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 中间 - 版本列表
-            CreateWindowW(L"Static", L"游戏版本",
+            CreateWindowW(L"Static", L"Versions:",
                 WS_CHILD | WS_VISIBLE,
                 270, 20, 200, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
@@ -419,38 +413,34 @@ LRESULT CALLBACK WndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
                 WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
                 270, 45, 420, 380, h, (HMENU)ID_LIST_VERSIONS, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Button", L"刷新",
+            CreateWindowW(L"Button", L"Refresh",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 270, 435, 100, 30, h, (HMENU)ID_BTN_REFRESH, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Button", L"下载版本",
+            CreateWindowW(L"Button", L"Download",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 380, 435, 100, 30, h, (HMENU)ID_BTN_DOWNLOAD, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Button", L"启动游戏",
+            CreateWindowW(L"Button", L"Play",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 490, 435, 100, 30, h, (HMENU)ID_BTN_PLAY, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            CreateWindowW(L"Button", L"设置",
+            CreateWindowW(L"Button", L"Settings",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 600, 435, 90, 30, h, (HMENU)ID_BTN_SETTINGS, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 底部状态栏
-            g_hStatus = CreateWindowW(L"Static", L"就绪",
+            g_hStatus = CreateWindowW(L"Static", L"Ready",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
                 20, 485, 500, 20, h, (HMENU)ID_STATUS, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 进度条
             g_hProgress = CreateWindowW(L"msctls_progress32", L"",
                 WS_CHILD | WS_VISIBLE | PBS_SMOOTH,
                 20, 510, 660, 20, h, (HMENU)ID_PROGRESS, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 版本信息
             CreateWindowW(L"Static", L"v1.0.0 - SCL SUPER CRAFT LAUNCHER",
                 WS_CHILD | WS_VISIBLE,
                 540, 490, 200, 20, h, NULL, ((LPCREATESTRUCT)l)->hInstance, NULL);
             
-            // 初始化
             g_configDir = GetAppData();
             g_gameDir = GetMinecraftDir();
             CreateDir(g_configDir);
@@ -492,9 +482,9 @@ LRESULT CALLBACK WndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
             }
             else if (id == ID_BTN_SETTINGS && code == BN_CLICKED) {
                 wchar_t info[512];
-                swprintf_s(info, L"配置目录:\n%ls\n\n游戏目录:\n%ls\n\n当前镜像:\n%ls",
+                wsprintfW(info, L"Config:\n%ls\n\nGame:\n%ls\n\nMirror:\n%ls",
                     g_configDir.c_str(), g_gameDir.c_str(), MIRRORS[g_mirrorIdx]);
-                MessageBoxW(h, info, L"设置", MB_ICONINFORMATION);
+                MessageBoxW(h, info, L"Settings", MB_ICONINFORMATION);
             }
             else if (id == ID_LIST_VERSIONS && code == LBN_DBLCLK) {
                 int sel = SendMessageW(g_hVersionList, LB_GETCURSEL, 0, 0);
@@ -531,11 +521,11 @@ LRESULT CALLBACK WndProc(HWND h, UINT m, WPARAM w, LPARAM l) {
     return DefWindowProc(h, m, w, l);
 }
 
-// ==================== 入口 ====================
+// ==================== Entry ====================
 int WINAPI wWinMain(HINSTANCE h, HINSTANCE, LPWSTR, int) {
-    WNDCLASSEXW wc = {sizeof(wc), CS_HREDRAW | CS_VREDRAW, WndProc, 0, 0, h,
+    WNDCLASSEXW wc = { sizeof(wc), CS_HREDRAW | CS_VREDRAW, WndProc, 0, 0, h,
         LoadIcon(NULL, IDI_APPLICATION), NULL,
-        CreateSolidBrush(CLR_BG), NULL, L"SCL", NULL};
+        CreateSolidBrush(CLR_BG), NULL, L"SCL", NULL };
     
     RegisterClassExW(&wc);
     
