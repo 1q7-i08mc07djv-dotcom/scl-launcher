@@ -3,13 +3,12 @@
  * A lightweight Minecraft launcher written in pure C (Win32 API)
  */
 
-#define UNICODE
-#define _UNICODE
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <wininet.h>
 #include <shlwapi.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -218,7 +217,7 @@ static void LoadAccounts() {
 
     WCHAR line[512];
     int cur = -1;
-    while (fgetws(line, 512, f)) {
+    while (fgetws(line, (int)512, f)) {
         /* Remove newline */
         int len = wcslen(line);
         while (len > 0 && (line[len-1] == L'\n' || line[len-1] == L'\r')) line[--len] = L'\0';
@@ -309,7 +308,7 @@ static void RefreshVersionList() {
             /* Check if already in list */
             BOOL found = FALSE;
             for (int i = 0; i < g_verCount; i++) {
-                if (wcsicmp(g_versions[i].id, start) == 0) { found = TRUE; break; }
+                if (_wcsicmp(g_versions[i].id, start) == 0) { found = TRUE; break; }
             }
             if (!found && wcslen(start) > 0 && wcslen(start) < 64) {
                 wcsncpy_s(g_versions[g_verCount].id, 64, start, _TRUNCATE);
