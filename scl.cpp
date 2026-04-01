@@ -7,7 +7,6 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <shlobj.h>
-#include <shlwapi.h>
 #include <commctrl.h>
 #include <string>
 #include <vector>
@@ -17,7 +16,6 @@
 
 #pragma comment(lib, "winhttp.lib")
 #pragma comment(lib, "comctl32.lib")
-#pragma comment(lib, "shlwapi.lib")
 
 using namespace std;
 
@@ -45,41 +43,36 @@ int g_mirrorIdx = 0;
 
 #define CLR_BG RGB(26, 26, 46)
 #define CLR_TEXT RGB(255, 255, 255)
+#define CLR_DIM RGB(128, 128, 128)
 
 HWND g_hMain, g_hStatus, g_hProgress, g_hVersionList, g_hAccountList;
 wstring g_gameDir, g_configDir;
 vector<wstring> g_versions;
 vector<wstring> g_accounts;
 
-wstring GetAppData() {
+wstring GetAppDataDir() {
     wchar_t p[MAX_PATH];
     SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, p);
-    wstring result = wstring(p) + L"\\SCL";
-    return result;
+    return wstring(p) + L"\\SCL";
 }
 
 wstring GetMinecraftDir() {
     wchar_t p[MAX_PATH];
     SHGetFolderPathW(NULL, CSIDL_APPDATA, NULL, 0, p);
-    wstring result = wstring(p) + L"\\.minecraft";
-    return result;
+    return wstring(p) + L"\\.minecraft";
 }
 
 bool DirExists(const wstring& d) {
     DWORD attr = GetFileAttributesW(d.c_str());
-    return (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY));
+    return (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 void CreateDir(const wstring& d) {
-    if (!DirExists(d)) {
-        CreateDirectoryW(d.c_str(), NULL);
-    }
+    if (!DirExists(d)) CreateDirectoryW(d.c_str(), NULL);
 }
 
-void SetStatus(const wchar_t* msg) {
-    if (g_hStatus) {
-        SetWindowTextW(g_hStatus, msg);
-    }
+void SetStatus(HWND h, const wchar_t* msg) {
+    if (h) SetWindowTextW(h, msg);
 }
 
 string WideToUtf8(const wstring& w) {
@@ -100,7 +93,7 @@ wstring Utf8ToWide(const string& s) {
 
 wstring GenUUID(const wstring& name) {
     string input = "OfflinePlayer:" + WideToUtf8(name);
-    unsigned int h[4] = {0, 0, 0, 0};
+    unsigned int h[4] = {0,0,0,0};
     for (size_t i = 0; i < input.size(); i++) {
         h[i % 4] = h[i % 4] * 31 + (unsigned int)input[i];
     }
@@ -113,9 +106,9 @@ wstring GenUUID(const wstring& name) {
 }
 
 bool HttpDownload(const wstring& url, const wstring& path) {
-    URL_COMPONENTSW uc = { sizeof(uc) };
-    wchar_t host[256] = {0};
-    wchar_t pathb[2048] = {0};
+    URL_COMPONENTSW uc = {};
+    uc.dwStructSize = sizeof(uc);
+    wchar_t host[256] = {}, pathb[2048] = {};
     uc.lpszHostName = host;
     uc.lpszUrlPath = pathb;
     uc.dwHostNameLength = 255;
@@ -137,25 +130,17 @@ bool HttpDownload(const wstring& url, const wstring& path) {
     WinHttpReceiveResponse(req, NULL);
     
     size_t ps = path.rfind(L'\\');
-    if (ps != wstring::npos) {
-        CreateDir(path.substr(0, ps));
-    }
+    if (ps != wstring::npos) CreateDir(path.substr(0, ps));
     
     ofstream f(WideToUtf8(path), ios::binary);
-    if (!f.is_open()) {
-        WinHttpCloseHandle(req);
-        WinHttpCloseHandle(conn);
-        WinHttpCloseHandle(ses);
-        return false;
-    }
+    if (!f.is_open()) { WinHttpCloseHandle(req); WinHttpCloseHandle(conn); WinHttpCloseHandle(ses); return false; }
     
-    vector<char> buf(65536);
+    char buf[65536];
     DWORD br;
-    while (WinHttpReadData(req, buf.data(), (DWORD)buf.size(), &br) && br > 0) {
-        f.write(buf.data(), br);
+    while (WinHttpReadData(req, buf, sizeof(buf), &br) && br > 0) {
+        f.write(buf, br);
     }
     f.close();
-    
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(conn);
     WinHttpCloseHandle(ses);
@@ -163,9 +148,9 @@ bool HttpDownload(const wstring& url, const wstring& path) {
 }
 
 string HttpGet(const wstring& url) {
-    URL_COMPONENTSW uc = { sizeof(uc) };
-    wchar_t host[256] = {0};
-    wchar_t pathb[2048] = {0};
+    URL_COMPONENTSW uc = {};
+    uc.dwStructSize = sizeof(uc);
+    wchar_t host[256] = {}, pathb[2048] = {};
     uc.lpszHostName = host;
     uc.lpszUrlPath = pathb;
     uc.dwHostNameLength = 255;
@@ -185,11 +170,11 @@ string HttpGet(const wstring& url) {
     WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     WinHttpReceiveResponse(req, NULL);
     
-    vector<char> buf(65536);
-    DWORD br;
     string res;
-    while (WinHttpReadData(req, buf.data(), (DWORD)buf.size(), &br) && br > 0) {
-        res.append(buf.data(), br);
+    char buf[65536];
+    DWORD br;
+    while (WinHttpReadData(req, buf, sizeof(buf), &br) && br > 0) {
+        res.append(buf, br);
     }
     
     WinHttpCloseHandle(req);
@@ -198,10 +183,10 @@ string HttpGet(const wstring& url) {
     return res;
 }
 
-void LoadVersions() {
+void LoadVersions(HWND hList, HWND hStatus) {
     g_versions.clear();
-    SendMessageW(g_hVersionList, LB_RESETCONTENT, 0, 0);
-    SetStatus(L"Loading versions...");
+    SendMessageW(hList, LB_RESETCONTENT, 0, 0);
+    SetStatus(hStatus, L"Loading versions...");
     
     wstring url = wstring(MIRRORS[g_mirrorIdx]) + L"/mc/game/version_manifest_v2.json";
     string json = HttpGet(url);
@@ -216,34 +201,32 @@ void LoadVersions() {
     }
     
     if (json.empty()) {
-        SetStatus(L"Failed to load versions");
+        SetStatus(hStatus, L"Failed to load versions");
         return;
     }
     
-    size_t p = 0;
-    while ((p = json.find("\"id\":\"", p)) != string::npos) {
-        p += 6;
-        size_t e = json.find('"', p);
+    size_t pos = 0;
+    while ((pos = json.find("\"id\":\"", pos)) != string::npos) {
+        pos += 6;
+        size_t e = json.find('"', pos);
         if (e == string::npos) break;
-        wstring id = Utf8ToWide(json.substr(p, e - p));
+        wstring id = Utf8ToWide(json.substr(pos, e - pos));
         g_versions.push_back(id);
-        
         wstring display = id;
-        if (DirExists(g_gameDir + L"\\versions\\" + id)) {
-            display += L" [Installed]";
-        }
-        SendMessageW(g_hVersionList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
+        if (DirExists(g_gameDir + L"\\versions\\" + id)) display += L" [Installed]";
+        SendMessageW(hList, LB_ADDSTRING, 0, (LPARAM)display.c_str());
+        pos = e;
     }
     
     wchar_t msg[256];
     wsprintfW(msg, L"Loaded %d versions", (int)g_versions.size());
-    SetStatus(msg);
+    SetStatus(hStatus, msg);
 }
 
-bool InstallVersion(const wstring& ver) {
+bool InstallVersion(HWND hStatus, const wstring& ver) {
     wchar_t msg[256];
     wsprintfW(msg, L"Installing: %s", ver.c_str());
-    SetStatus(msg);
+    SetStatus(hStatus, msg);
     
     wstring vdir = g_gameDir + L"\\versions\\" + ver;
     CreateDir(vdir);
@@ -252,19 +235,18 @@ bool InstallVersion(const wstring& ver) {
     wstring jsonPath = vdir + L"\\" + ver + L".json";
     
     if (!HttpDownload(jsonUrl, jsonPath)) {
-        SetStatus(L"Download failed");
+        SetStatus(hStatus, L"Download failed");
         return false;
     }
     
-    LoadVersions();
     wsprintfW(msg, L"Version %s installed", ver.c_str());
-    SetStatus(msg);
+    SetStatus(hStatus, msg);
     return true;
 }
 
-void LoadAccounts() {
+void LoadAccounts(HWND hList) {
     g_accounts.clear();
-    SendMessageW(g_hAccountList, LB_RESETCONTENT, 0, 0);
+    SendMessageW(hList, LB_RESETCONTENT, 0, 0);
     
     wstring fpath = g_configDir + L"\\accounts.txt";
     ifstream f(WideToUtf8(fpath));
@@ -272,18 +254,18 @@ void LoadAccounts() {
         string line;
         while (getline(f, line)) {
             if (line.empty() || line[0] == '#') continue;
-            size_t p1 = line.find('|');
-            if (p1 != string::npos) {
-                wstring name = Utf8ToWide(line.substr(0, p1));
+            size_t p = line.find('|');
+            if (p != string::npos) {
+                wstring name = Utf8ToWide(line.substr(0, p));
                 g_accounts.push_back(name);
-                SendMessageW(g_hAccountList, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                SendMessageW(hList, LB_ADDSTRING, 0, (LPARAM)name.c_str());
             }
         }
         f.close();
     }
 }
 
-void AddAccount(const wstring& name) {
+void AddAccount(HWND hStatus, const wstring& name) {
     wstring fpath = g_configDir + L"\\accounts.txt";
     ofstream f(WideToUtf8(fpath), ios::app);
     if (f.is_open()) {
@@ -292,32 +274,32 @@ void AddAccount(const wstring& name) {
     }
     wchar_t msg[256];
     wsprintfW(msg, L"Account added: %s", name.c_str());
-    SetStatus(msg);
-    LoadAccounts();
+    SetStatus(hStatus, msg);
+    LoadAccounts(GetDlgItem(g_hMain, ID_LIST_ACCOUNTS));
 }
 
-bool LaunchGame(const wstring& ver) {
+bool LaunchGame(HWND hStatus, const wstring& ver) {
     if (g_accounts.empty()) {
-        SetStatus(L"Please add account first");
+        SetStatus(hStatus, L"Please add account first");
         return false;
     }
     
     wstring vdir = g_gameDir + L"\\versions\\" + ver;
     if (!DirExists(vdir)) {
-        SetStatus(L"Version not installed");
+        SetStatus(hStatus, L"Version not installed");
         return false;
     }
     
     wstring java = g_gameDir + L"\\runtime\\java\\bin\\java.exe";
-    if (!DirExists(java.substr(0, java.find_last_of(L"\\"))) {
+    if (!DirExists(java)) {
         wchar_t jh[MAX_PATH];
         if (GetEnvironmentVariableW(L"JAVA_HOME", jh, MAX_PATH)) {
             java = wstring(jh) + L"\\bin\\java.exe";
         }
     }
     
-    if (!DirExists(java.substr(0, java.find_last_of(L"\\"))) {
-        SetStatus(L"Java not found! Install JDK 21");
+    if (!DirExists(java)) {
+        SetStatus(hStatus, L"Java not found! Install JDK 21");
         MessageBoxW(g_hMain, L"Java not found!\nInstall JDK 21\nhttps://adoptium.net/", L"Error", MB_ICONERROR);
         return false;
     }
@@ -333,7 +315,7 @@ bool LaunchGame(const wstring& ver) {
     cmd += L"--gameDir \"" + g_gameDir + L"\" ";
     cmd += L"--width 854 --height 480";
     
-    SetStatus(L"Launching game...");
+    SetStatus(hStatus, L"Launching game...");
     
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi;
@@ -341,88 +323,105 @@ bool LaunchGame(const wstring& ver) {
     if (CreateProcessW(NULL, (LPWSTR)cmd.c_str(), NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, g_gameDir.c_str(), &si, &pi)) {
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
-        SetStatus(L"Game launched!");
+        SetStatus(hStatus, L"Game launched!");
         return true;
     }
     
-    SetStatus(L"Launch failed");
+    SetStatus(hStatus, L"Launch failed");
     return false;
 }
 
-INT_PTR CALLBACK DlgProc(HWND h, UINT m, WPARAM w, LPARAM l) {
-    switch (m) {
-        case WM_INITDIALOG:
-            g_hMain = h;
-            g_hVersionList = GetDlgItem(h, ID_LIST_VERSIONS);
-            g_hAccountList = GetDlgItem(h, ID_LIST_ACCOUNTS);
-            g_hStatus = GetDlgItem(h, ID_STATUS);
-            g_hProgress = GetDlgItem(h, ID_PROGRESS);
+void LoadVersionsDlg(HWND hStatus) {
+    LoadVersions(GetDlgItem(g_hMain, ID_LIST_VERSIONS), hStatus);
+}
+
+INT_PTR CALLBACK DialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            g_hMain = hwnd;
+            g_hStatus = GetDlgItem(hwnd, 4001);
+            g_hVersionList = GetDlgItem(hwnd, ID_LIST_VERSIONS);
+            g_hAccountList = GetDlgItem(hwnd, ID_LIST_ACCOUNTS);
             
-            g_configDir = GetAppData();
+            g_configDir = GetAppDataDir();
             g_gameDir = GetMinecraftDir();
             CreateDir(g_configDir);
             CreateDir(g_gameDir);
-            LoadAccounts();
-            LoadVersions();
-            return TRUE;
             
+            LoadAccounts(GetDlgItem(hwnd, ID_LIST_ACCOUNTS));
+            LoadVersions(GetDlgItem(hwnd, ID_LIST_VERSIONS), GetDlgItem(hwnd, 4001));
+            return TRUE;
+        }
+        
         case WM_COMMAND: {
-            int id = LOWORD(w);
-            int code = HIWORD(w);
+            int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
             
             if (id == ID_BTN_LOGIN && code == BN_CLICKED) {
-                wchar_t name[256] = {0};
-                GetDlgItemTextW(h, ID_EDIT_NAME, name, 256);
+                wchar_t name[256] = {};
+                GetDlgItemTextW(hwnd, ID_EDIT_NAME, name, 256);
                 if (wcslen(name) > 0) {
-                    AddAccount(name);
-                    SetDlgItemTextW(h, ID_EDIT_NAME, L"");
+                    AddAccount(GetDlgItem(hwnd, 4001), name);
+                    SetDlgItemTextW(hwnd, ID_EDIT_NAME, L"");
                 }
             }
             else if (id == ID_BTN_REFRESH && code == BN_CLICKED) {
-                LoadVersions();
+                LoadVersions(GetDlgItem(hwnd, ID_LIST_VERSIONS), GetDlgItem(hwnd, 4001));
             }
             else if (id == ID_BTN_DOWNLOAD && code == BN_CLICKED) {
-                int sel = SendMessageW(g_hVersionList, LB_GETCURSEL, 0, 0);
+                int sel = SendMessageW(GetDlgItem(hwnd, ID_LIST_VERSIONS), LB_GETCURSEL, 0, 0);
                 if (sel >= 0 && sel < (int)g_versions.size()) {
-                    InstallVersion(g_versions[sel]);
+                    InstallVersion(GetDlgItem(hwnd, 4001), g_versions[sel]);
+                    LoadVersions(GetDlgItem(hwnd, ID_LIST_VERSIONS), GetDlgItem(hwnd, 4001));
                 }
             }
             else if (id == ID_BTN_PLAY && code == BN_CLICKED) {
-                int sel = SendMessageW(g_hVersionList, LB_GETCURSEL, 0, 0);
+                int sel = SendMessageW(GetDlgItem(hwnd, ID_LIST_VERSIONS), LB_GETCURSEL, 0, 0);
                 if (sel >= 0 && sel < (int)g_versions.size()) {
-                    LaunchGame(g_versions[sel]);
-                } else if (!g_versions.empty()) {
-                    LaunchGame(g_versions[0]);
+                    LaunchGame(GetDlgItem(hwnd, 4001), g_versions[sel]);
+                }
+                else if (!g_versions.empty()) {
+                    LaunchGame(GetDlgItem(hwnd, 4001), g_versions[0]);
                 }
             }
             else if (id == ID_BTN_SETTINGS && code == BN_CLICKED) {
                 wchar_t info[512];
                 wsprintfW(info, L"Config:\n%ls\n\nGame:\n%ls\n\nMirror:\n%ls",
                     g_configDir.c_str(), g_gameDir.c_str(), MIRRORS[g_mirrorIdx]);
-                MessageBoxW(h, info, L"Settings", MB_ICONINFORMATION);
+                MessageBoxW(hwnd, info, L"Settings", MB_ICONINFORMATION);
             }
             return TRUE;
         }
         
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLORDLG: {
-            HDC dc = (HDC)w;
-            SetBkMode(dc, TRANSPARENT);
-            SetTextColor(dc, CLR_TEXT);
+            HDC hdc = (HDC)wParam;
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, CLR_TEXT);
             return (INT_PTR)CreateSolidBrush(CLR_BG);
         }
         
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            HBRUSH brush = CreateSolidBrush(CLR_BG);
+            FillRect(hdc, &rect, brush);
+            DeleteObject(brush);
+            return 1;
+        }
+        
         case WM_CLOSE:
-            EndDialog(h, 0);
+            EndDialog(hwnd, 0);
             return TRUE;
     }
     return FALSE;
 }
 
-int WINAPI wWinMain(HINSTANCE h, HINSTANCE, LPWSTR, int) {
+int WINAPI WinMain(HINSTANCE h, HINSTANCE, LPWSTR, int nCmdShow) {
     INITCOMMONCONTROLSEX icex = { sizeof(icex), ICC_LISTVIEW_CLASSES | ICC_PROGRESS_CLASS };
     InitCommonControlsEx(&icex);
     
-    DialogBoxParamW(h, MAKEINTRESOURCE(1), NULL, DlgProc, 0);
+    DialogBoxW(h, MAKEINTRESOURCE(1), NULL, DialogProc);
     return 0;
 }
