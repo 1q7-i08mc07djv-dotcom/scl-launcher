@@ -1,0 +1,127 @@
+﻿plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'edu.sc.seis.launch4j' version '2.1.0'  // Launch4j插件 - 生成exe
+}
+
+group = 'com.SCL'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JavaFX (运行时包含)
+    implementation 'org.openjfx:javafx:21'
+    implementation 'org.openjfx:javafx-controls:21:win'
+    implementation 'org.openjfx:javafx-graphics:21:win'
+    implementation 'org.openjfx:javafx-fxml:21:win'
+    implementation 'org.openjfx:javafx-base:21:win'
+    
+    // JSON
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // HTTP
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    
+    // 日志
+    implementation 'org.apache.logging.log4j:log4j-core:3.0.0-beta2'
+    implementation 'org.apache.logging.log4j:log4j-api:3.0.0-beta2'
+}
+
+javafx {
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.base']
+}
+
+application {
+    mainClass = 'com.SCL.Main'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// ==================== Launch4j EXE打包配置 ====================
+
+launch4j {
+    // exe图标
+    icon = "${projectDir}/src/main/resources/assets/icon.ico"
+    
+    // 生成的exe文件名
+    outputFile = "${projectDir}/dist/SCL.exe"
+    
+    // 主类
+    mainClassName = 'com.SCL.Main'
+    
+    // jar文件
+    jar = "${buildDir}/libs/${project.name}-${project.version}.jar"
+    
+    // 捆绑的jre目录
+    bundledJrePath = 'jre'
+    bundledJreRegKey = 'HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit'
+    dontWrapJar = false
+    
+    // 是否使用自有JRE
+    wrapLaunch4jAntTask = false
+    allowVarargJar = true
+    
+    // Java版本要求
+    minVersion = '21.0'
+    
+    // 内存设置
+    initialHeapSize = 256
+    initialHeapPercent = 0
+    maxHeapSize = 2048
+    maxHeapPercent = 50
+    
+    // 虚拟机选项
+    jvmOptions = '-Xms256m -Xmx2048m'
+    
+    // 32位选项
+    dontIncludePrivateJres = true
+    preferPrivateJres = false
+    
+    // 杂项
+    stayAlive = false
+    manifest = "${projectDir}/src/main/resources/launch4j.manifest"
+    
+    // Windows特定
+    singleInstance = true
+    singleInstanceMutexName = 'SCL_SingleInstance'
+}
+
+// 打包任务
+task distZip(type: Zip) {
+    group = 'distribution'
+    baseName = 'SCL'
+    
+    from("${buildDir}/libs/${project.name}-${project.version}.jar")
+    from("${projectDir}/src/main/resources/assets/jre") {
+        into 'jre'
+    }
+    from("${projectDir}/README.md")
+    from("${projectDir}/LICENSE")
+    
+    archiveFileName = "${projectDir}/dist/SCL-${project.version}-windows.zip"
+}
+
+task createExe(type: Exec) {
+    dependsOn jar
+    
+    group = 'distribution'
+    description = 'Build Windows executable'
+    
+    commandLine 'cmd', '/c', "${projectDir}/build_exe.bat"
+}
+
+// 清理任务
+task cleanExe(type: Delete) {
+    delete "${projectDir}/dist/SCL.exe"
+}

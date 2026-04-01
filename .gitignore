@@ -1,0 +1,43 @@
+# Gradle
+.gradle/
+build/
+build_all/
+*.jar
+
+# Java
+*.class
+*.classpath
+*.project
+.settings/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+
+# Temp
+*.tmp
+*.temp
+.pkg/
+.pkg_temp/
+.launch4j/
+dist/
+
+# Windows
+*.exe
+*.dll
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Minecraft
+.minecraft/
+.SCL/

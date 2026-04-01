@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <!-- 基本信息 -->
+  <headerType>gui</headerType>
+  <dontWrapJar>true</dontWrapJar>
+  <errTitle>SCL 错误</errTitle>
+  
+  <!-- 输出文件 -->
+  <outfile>dist\SCL.exe</outfile>
+  
+  <!-- 主程序 -->
+  <jar>SCL.jar</jar>
+  <exeType>jreOnly</exeType>
+  
+  <!-- 运行目录 -->
+  <chdir>.</chdir>
+  
+  <!-- JRE配置 -->
+  <jre>
+    <path>jre</path>
+    <minVersion>21.0</minVersion>
+    <initialHeapSize>256</initialHeapSize>
+    <maxHeapSize>2048</maxHeapSize>
+    <jdkPreference>jdkOnly</jdkPreference>
+  </jre>
+  
+  <!-- JVM选项 -->
+  <javaOptions>
+    <opt>-Xms256m</opt>
+    <opt>-Xmx2048m</opt>
+    <opt>-Xshare:off</opt>
+    <opt>--add-opens=javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED</opt>
+  </javaOptions>
+  
+  <!-- 图标 -->
+  <icon>src\main\resources\assets\icon.ico</icon>
+  
+  <!-- 单实例 -->
+  <singleInstance>yes</singleInstance>
+  <singleInstanceMutexName>SCL_SingleInstance</singleInstanceMutexName>
+  
+  <!-- 保活 -->
+  <stayAlive>false</stayAlive>
+  
+  <!-- 调试 -->
+  <debug>false</debug>
+  
+  <!-- Windows特定 -->
+  <priority>normal</priority>
+  <supportUrl></supportUrl>
+  
+  <!-- 图标和版本信息 -->
+  <version>1.0.0</version>
+  <productName>SCL</productName>
+  <companyName>SCL</companyName>
+  <fileDescription>Minecraft启动器</fileDescription>
+  <copyright>Copyright (c) 2026</copyright>
+  
+  <!-- 语言 -->
+  <language>zh_CN</language>
+  
+  <!-- 错误消息 -->
+  <messages>
+    <startupErr>启动失败，请检查Java运行环境</startupErr>
+    <bundledJreErr>未找到内置Java运行环境</bundledJreErr>
+    <jreVersionErr>Java版本过低，需要JDK 21或更高版本</jreVersionErr>
+    <launcherErr>主程序启动失败</launcherErr>
+    <instanceAlreadyRunningErr>程序已在运行中</instanceAlreadyRunningErr>
+  </messages>
+</launch4jConfig>
