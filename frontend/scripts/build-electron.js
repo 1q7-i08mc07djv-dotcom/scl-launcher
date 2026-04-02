@@ -22,9 +22,9 @@ cpSync(join(root, 'electron', 'main.cjs'), join(distDir, 'main.cjs'));
 cpSync(join(root, 'electron', 'preload.js'), join(distDir, 'preload.js'));
 console.log('[build] Copied main.cjs, preload.js');
 
-// NOTE: start-backend.bat will be copied to win-unpacked/resources/ by this script
-// The build script is run BEFORE electron-builder, so we just place it next to dist/
-// and electron-builder will handle the extraResources placement
+// Copy start-backend.bat to dist/ (electron-builder extraResources picks it up from here)
+cpSync(join(root, 'start-backend.bat'), join(distDir, 'start-backend.bat'));
+console.log('[build] Copied start-backend.bat');
 
 // Create package.json in dist/ for electron-builder
 const appPkg = {
@@ -38,7 +38,18 @@ const appPkg = {
   build: {
     appId: 'com.scl.launcher',
     productName: 'SCL Launcher',
+    electronVersion: '41.1.1',
     asar: false,
+    files: [
+      'package.json',
+      'main.cjs',
+      'preload.js',
+      'index.html',
+      'favicon.svg',
+      'icons.svg',
+      'assets',
+      'start-backend.bat'
+    ],
     win: {
       target: [
         { target: 'portable', arch: ['x64'] }

@@ -49,15 +49,14 @@
     "appId": "com.scl.launcher",
     "productName": "SCL Launcher",
     "directories": {
-      "output": "../release",
-      "root": "app"
+      "output": "../release"
     },
     "files": [
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "start-backend.bat",
+        "from": "dist/start-backend.bat",
         "to": "start-backend.bat"
       }
     ],
