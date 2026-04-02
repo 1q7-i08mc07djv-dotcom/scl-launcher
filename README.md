@@ -68,6 +68,30 @@ npm run dev
 
 启动后访问 **http://localhost:5173**
 
+## 下载发布版
+
+> ⚠️ electron-builder 在 Windows 上因 winCodeSign 工具的 7z 归档包含 macOS 符号链接，7-Za 解压时报权限错误，导致 portable exe 打包失败。临时方案：
+
+**方式一：直接运行（推荐）**
+```
+frontend\dist\dist\win-unpacked\SCL Launcher.exe
+```
+双击即可运行，完整功能，无需安装。
+
+**方式二：压缩包**
+```
+frontend\release\SCL-Launcher-1.0.0-win.zip
+```
+解压后运行 `win-unpacked\SCL Launcher.exe`。
+
+**方式三：源码构建**
+```batch
+cd frontend
+npm install
+npm run electron:dist
+```
+构建产物输出到 `frontend\release\`。
+
 ## 项目结构
 
 ```
