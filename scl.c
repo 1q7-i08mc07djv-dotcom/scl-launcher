@@ -1,4 +1,4 @@
-#include <windows.h>
+﻿#include <windows.h>
 #include <wininet.h>
 #include <shlwapi.h>
 #include <commctrl.h>
@@ -79,6 +79,9 @@ typedef struct {
     HWND pageVersions;
     HWND pageAccounts;
     HWND pageSettings;
+    HWND hwndTabs;
+    HWND lvVersions;
+    HWND lvAccounts;
     
     int currentPage;
     int currentTheme;
@@ -218,6 +221,9 @@ static void SwitchPage(int page) {
     ShowWindow(g_ui.pageVersions, (page == 1) ? SW_SHOW : SW_HIDE);
     ShowWindow(g_ui.pageAccounts, (page == 2) ? SW_SHOW : SW_HIDE);
     ShowWindow(g_ui.pageSettings, (page == 3) ? SW_SHOW : SW_HIDE);
+    // 新增：MC下载页面
+    HWND pageDownload = g_ui.hwndTabs + 4;
+    ShowWindow(pageDownload, (page == 4) ? SW_SHOW : SW_HIDE);
     
     InvalidateRect(g_ui.hwnd, NULL, TRUE);
 }
@@ -300,12 +306,12 @@ static void LaunchGame() {
     int accIdx = (int)SendMessageW(g_ui.comboAccounts, CB_GETCURSEL, 0, 0);
     
     if (verIdx == CB_ERR) {
-        ShowError(L"请先选择游戏版本！");
+        ShowError(L"Please select a game version first.");
         return;
     }
     
     if (accIdx == CB_ERR) {
-        ShowError(L"请先选择账号！");
+        ShowError(L"Please select an account first.");
         return;
     }
     
@@ -328,7 +334,7 @@ static void LaunchGame() {
     WCHAR version[64];
     SendMessageW(g_ui.comboVersions, CB_GETLBTEXT, verIdx, (LPARAM)version);
     
-    SetWindowTextW(g_ui.hwndStatus, L"正在启动游戏...");
+    SetWindowTextW(g_ui.hwndStatus, L"Launching game...");
     
     SHELLEXECUTEINFOW sei = {0};
     sei.cbSize = sizeof(sei);
@@ -347,10 +353,10 @@ static void LaunchGame() {
     
     if (ShellExecuteExW(&sei)) {
         CloseHandle(sei.hProcess);
-        SetWindowTextW(g_ui.hwndStatus, L"游戏启动成功！");
+        SetWindowTextW(g_ui.hwndStatus, L"Game launched!");
     } else {
-        SetWindowTextW(g_ui.hwndStatus, L"启动失败！");
-        ShowError(L"无法启动游戏，请检查Java路径！");
+        SetWindowTextW(g_ui.hwndStatus, L"Launch failed!");
+        ShowError(L"Could not launch game, check Java path!");
     }
 }
 
@@ -372,7 +378,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             
             INITCOMMONCONTROLSEX icex = {0};
             icex.dwSize = sizeof(icex);
-            icex.dwICC = ICC_STANDARD_CLASSES;
+            icex.dwICC = ICC_STANDARD_CLASSES | ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
             InitCommonControlsEx(&icex);
             
             g_ui.hFontTitle = CreateAppFont(24, TRUE);
@@ -398,7 +404,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             
             int y = 40;
             g_ui.btnHome = CreateWindowExW(
-                0, L"BUTTON", L"🏠 首页",
+                0, L"BUTTON", L"Home",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)101, GetModuleHandle(NULL), NULL
@@ -406,7 +412,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             y += 55;
             
             g_ui.btnVersions = CreateWindowExW(
-                0, L"BUTTON", L"📦 版本管理",
+                0, L"BUTTON", L"Versions",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)102, GetModuleHandle(NULL), NULL
@@ -414,7 +420,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             y += 55;
             
             g_ui.btnAccounts = CreateWindowExW(
-                0, L"BUTTON", L"👤 账号管理",
+                0, L"BUTTON", L"Accounts",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)103, GetModuleHandle(NULL), NULL
@@ -422,38 +428,46 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             y += 55;
             
             g_ui.btnSettings = CreateWindowExW(
-                0, L"BUTTON", L"⚙️ 设置",
+                0, L"BUTTON", L"Settings",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)104, GetModuleHandle(NULL), NULL
             );
             
             g_ui.btnTheme = CreateWindowExW(
-                0, L"BUTTON", L"🎨 Theme",
+                0, L"BUTTON", L"Theme",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 520, 180, 40,
                 g_ui.hwndSidebar, (HMENU)105, GetModuleHandle(NULL), NULL
             );
             
-            int mainMargin = 40;
-            int contentWidth = 700;
-            
+            int mainMargin = 20;
+            int contentWidth = 740;
+
+            g_ui.hwndTabs = CreateWindowExW(
+                0, WC_TABCONTROLW, L"",
+                WS_CHILD | WS_VISIBLE | TCS_TABS,
+                mainMargin, mainMargin, contentWidth, 520,
+                g_ui.hwndMain, (HMENU)301, GetModuleHandle(NULL), NULL
+            );
+
+            // create pages as children of the tab control (will be shown/hidden)
             g_ui.pageHome = CreateWindowExW(
                 0, L"STATIC", L"",
                 WS_CHILD | WS_VISIBLE,
-                mainMargin, mainMargin, contentWidth, 520,
-                g_ui.hwndMain, NULL, GetModuleHandle(NULL), NULL
+                0, 0, contentWidth, 520,
+                g_ui.hwndTabs, NULL, GetModuleHandle(NULL), NULL
             );
             
             CreateWindowExW(
-                0, L"STATIC", L"SCL - SUPER CRAFT LAUNCHER",
+                0, L"STATIC", L"SCL Launcher",
                 WS_CHILD | WS_VISIBLE,
                 0, 0, contentWidth, 40,
                 g_ui.pageHome, NULL, GetModuleHandle(NULL), NULL
             );
             
             CreateWindowExW(
-                0, L"STATIC", L"选择版本:",
+                0, L"STATIC", L"Version:",
                 WS_CHILD | WS_VISIBLE,
                 0, 60, 120, 30,
                 g_ui.pageHome, NULL, GetModuleHandle(NULL), NULL
@@ -467,7 +481,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             );
             
             CreateWindowExW(
-                0, L"STATIC", L"选择账号:",
+                0, L"STATIC", L"Account:",
                 WS_CHILD | WS_VISIBLE,
                 0, 140, 120, 30,
                 g_ui.pageHome, NULL, GetModuleHandle(NULL), NULL
@@ -481,45 +495,113 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             );
             
             g_ui.btnLaunch = CreateWindowExW(
-                0, L"BUTTON", L"🚀 启动游戏",
+                0, L"BUTTON", L"Launch Game",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 260, contentWidth, 60,
                 g_ui.pageHome, (HMENU)201, GetModuleHandle(NULL), NULL
             );
             
             g_ui.btnRefresh = CreateWindowExW(
-                0, L"BUTTON", L"🔄 刷新",
+                0, L"BUTTON", L"Refresh",
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 0, 340, contentWidth, 40,
                 g_ui.pageHome, (HMENU)202, GetModuleHandle(NULL), NULL
             );
             
             g_ui.pageVersions = CreateWindowExW(
-                0, L"STATIC", L"版本管理 - 开发中...",
+                0, L"STATIC", L"",
                 WS_CHILD | WS_VISIBLE,
-                mainMargin, mainMargin, contentWidth, 520,
-                g_ui.hwndMain, NULL, GetModuleHandle(NULL), NULL
+                0, 0, contentWidth, 520,
+                g_ui.hwndTabs, NULL, GetModuleHandle(NULL), NULL
             );
             ShowWindow(g_ui.pageVersions, SW_HIDE);
-            
+
+            // Versions list view
+            g_ui.lvVersions = CreateWindowExW(
+                0, WC_LISTVIEWW, L"",
+                WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL,
+                10, 10, contentWidth - 20, 500,
+                g_ui.pageVersions, (HMENU)401, GetModuleHandle(NULL), NULL
+            );
+
             g_ui.pageAccounts = CreateWindowExW(
-                0, L"STATIC", L"账号管理 - 开发中...",
+                0, L"STATIC", L"",
                 WS_CHILD | WS_VISIBLE,
-                mainMargin, mainMargin, contentWidth, 520,
-                g_ui.hwndMain, NULL, GetModuleHandle(NULL), NULL
+                0, 0, contentWidth, 520,
+                g_ui.hwndTabs, NULL, GetModuleHandle(NULL), NULL
             );
             ShowWindow(g_ui.pageAccounts, SW_HIDE);
-            
+
+            // Accounts list view
+            g_ui.lvAccounts = CreateWindowExW(
+                0, WC_LISTVIEWW, L"",
+                WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_SINGLESEL,
+                10, 10, contentWidth - 20, 500,
+                g_ui.pageAccounts, (HMENU)402, GetModuleHandle(NULL), NULL
+            );
+
             g_ui.pageSettings = CreateWindowExW(
-                0, L"STATIC", L"设置 - 开发中...",
+                0, L"STATIC", L"Settings - Under development",
                 WS_CHILD | WS_VISIBLE,
-                mainMargin, mainMargin, contentWidth, 520,
-                g_ui.hwndMain, NULL, GetModuleHandle(NULL), NULL
+                0, 0, contentWidth, 520,
+                g_ui.hwndTabs, NULL, GetModuleHandle(NULL), NULL
             );
             ShowWindow(g_ui.pageSettings, SW_HIDE);
+
+            // 新增：MC下载页面
+            HWND pageDownload = CreateWindowExW(
+                0, L"STATIC", L"",
+                WS_CHILD | WS_VISIBLE,
+                0, 0, contentWidth, 520,
+                g_ui.hwndTabs, NULL, GetModuleHandle(NULL), NULL
+            );
+            ShowWindow(pageDownload, SW_HIDE);
+
+            HWND btnDownload = CreateWindowExW(
+                0, L"BUTTON", L"Download Minecraft",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 20, 200, 40,
+                pageDownload, (HMENU)501, GetModuleHandle(NULL), NULL
+            );
+            HWND lblDownload = CreateWindowExW(
+                0, L"STATIC", L"Download official Minecraft client or server.",
+                WS_CHILD | WS_VISIBLE,
+                20, 70, 400, 30,
+                pageDownload, NULL, GetModuleHandle(NULL), NULL
+            );
+
+            // 插入新Tab
+            TCITEMW tie = {0};
+            tie.mask = TCIF_TEXT;
+            tie.pszText = L"Home";
+            TabCtrl_InsertItem(g_ui.hwndTabs, 0, &tie);
+            tie.pszText = L"Versions";
+            TabCtrl_InsertItem(g_ui.hwndTabs, 1, &tie);
+            tie.pszText = L"Accounts";
+            TabCtrl_InsertItem(g_ui.hwndTabs, 2, &tie);
+            tie.pszText = L"Settings";
+            TabCtrl_InsertItem(g_ui.hwndTabs, 3, &tie);
+            tie.pszText = L"Download";
+            TabCtrl_InsertItem(g_ui.hwndTabs, 4, &tie);
+
+            // configure listviews (columns)
+            if (g_ui.lvVersions) {
+                LVCOLUMNW col = {0};
+                col.mask = LVCF_TEXT | LVCF_WIDTH;
+                col.pszText = L"Version";
+                col.cx = contentWidth - 40;
+                ListView_InsertColumn(g_ui.lvVersions, 0, &col);
+            }
+            if (g_ui.lvAccounts) {
+                LVCOLUMNW col = {0};
+                col.mask = LVCF_TEXT | LVCF_WIDTH;
+                col.pszText = L"Account";
+                col.cx = contentWidth - 40;
+                ListView_InsertColumn(g_ui.lvAccounts, 0, &col);
+            }
             
             g_ui.hwndStatus = CreateWindowExW(
-                0, L"STATIC", L"就绪",
+                0, L"STATIC", L"Ready",
                 WS_CHILD | WS_VISIBLE,
                 sidebarWidth, 560, 780, 40,
                 hwnd, NULL, GetModuleHandle(NULL), NULL
@@ -560,7 +642,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     break;
                 case 202:
                     RefreshVersions();
-                    ShowInfo(L"版本列表已刷新！");
+                    ShowInfo(L"Version list refreshed!");
+                    break;
+                // 新增：下载按钮响应
+                case 501:
+                    ShellExecuteW(g_ui.hwnd, L"open", L"https://www.minecraft.net/en-us/download", NULL, NULL, SW_SHOWNORMAL);
                     break;
             }
         }
@@ -658,7 +744,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     );
     
     if (!hwnd) {
-        ShowError(L"无法创建主窗口！");
+        ShowError(L"Cannot create main window!");
         return 1;
     }
     
@@ -683,3 +769,4 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     CoUninitialize();
     return (int)msg.wParam;
 }
+
