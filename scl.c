@@ -403,40 +403,41 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             );
             
             int y = 40;
+            
             g_ui.btnHome = CreateWindowExW(
-                0, L"BUTTON", L"Home",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, L"SidebarButton", L"Home",
+                WS_CHILD | WS_VISIBLE,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)101, GetModuleHandle(NULL), NULL
             );
             y += 55;
             
             g_ui.btnVersions = CreateWindowExW(
-                0, L"BUTTON", L"Versions",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, L"SidebarButton", L"Versions",
+                WS_CHILD | WS_VISIBLE,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)102, GetModuleHandle(NULL), NULL
             );
             y += 55;
             
             g_ui.btnAccounts = CreateWindowExW(
-                0, L"BUTTON", L"Accounts",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, L"SidebarButton", L"Accounts",
+                WS_CHILD | WS_VISIBLE,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)103, GetModuleHandle(NULL), NULL
             );
             y += 55;
             
             g_ui.btnSettings = CreateWindowExW(
-                0, L"BUTTON", L"Settings",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, L"SidebarButton", L"Settings",
+                WS_CHILD | WS_VISIBLE,
                 0, y, sidebarWidth, 50,
                 g_ui.hwndSidebar, (HMENU)104, GetModuleHandle(NULL), NULL
             );
             
             g_ui.btnTheme = CreateWindowExW(
-                0, L"BUTTON", L"Theme",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, L"SidebarButton", L"Theme",
+                WS_CHILD | WS_VISIBLE,
                 20, 520, 180, 40,
                 g_ui.hwndSidebar, (HMENU)105, GetModuleHandle(NULL), NULL
             );
@@ -720,6 +721,47 @@ static void RegisterMainClass() {
     wc.hIconSm = LoadIconW(NULL, IDI_APPLICATION);
     
     RegisterClassExW(&wc);
+}
+
+// 1. 添加自绘按钮支持
+LRESULT CALLBACK SidebarButtonProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        RECT rc;
+        GetClientRect(hwnd, &rc);
+        int isHot = GetWindowLongPtrW(hwnd, GWLP_USERDATA) & 1;
+        int isActive = GetWindowLongPtrW(hwnd, GWLP_USERDATA) & 2;
+        Theme* theme = &g_ui.themes[g_ui.currentTheme];
+        HBRUSH hbr = CreateSolidBrush(isActive ? theme->accentColor : (isHot ? theme->hoverColor : theme->buttonColor));
+        FillRect(hdc, &rc, hbr);
+        DeleteObject(hbr);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, theme->textColor);
+        wchar_t text[64];
+        GetWindowTextW(hwnd, text, 64);
+        DrawTextW(hdc, text, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    case WM_MOUSEMOVE:
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, GetWindowLongPtrW(hwnd, GWLP_USERDATA) | 1);
+        InvalidateRect(hwnd, NULL, TRUE);
+        break;
+    case WM_MOUSELEAVE:
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, GetWindowLongPtrW(hwnd, GWLP_USERDATA) & ~1);
+        InvalidateRect(hwnd, NULL, TRUE);
+        break;
+    case BM_SETSTATE:
+        if (wParam)
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, GetWindowLongPtrW(hwnd, GWLP_USERDATA) | 2);
+        else
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, GetWindowLongPtrW(hwnd, GWLP_USERDATA) & ~2);
+        InvalidateRect(hwnd, NULL, TRUE);
+        break;
+    }
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
