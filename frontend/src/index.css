@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #FFFFFF;
+  background-color: #1A1A1A;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3D3D3D;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Prevent text selection on buttons */
+button {
+  user-select: none;
+}
+
+/* PCL CE-style gradient overlays for window edges */
+.edge-gradient-top {
+  background: linear-gradient(to bottom, rgba(33,0,0,0.13) 0%, rgba(17,0,0,0.07) 70%, rgba(0,0,0,0) 100%);
+}
+.edge-gradient-bottom {
+  background: linear-gradient(to top, rgba(33,0,0,0.13) 0%, rgba(17,0,0,0.07) 30%, rgba(0,0,0,0) 100%);
+}
+.edge-gradient-left {
+  background: linear-gradient(to right, rgba(33,0,0,0.13) 0%, rgba(17,0,0,0.07) 70%, rgba(0,0,0,0) 100%);
+}
+.edge-gradient-right {
+  background: linear-gradient(to left, rgba(33,0,0,0.13) 0%, rgba(17,0,0,0.07) 30%, rgba(0,0,0,0) 100%);
+}
+
+/* Corner radial gradients */
+.corner-tl {
+  background: radial-gradient(ellipse at top left, rgba(33,0,0,0.13) 20%, rgba(0,0,0,0) 100%);
+}
+.corner-tr {
+  background: radial-gradient(ellipse at top right, rgba(33,0,0,0.13) 20%, rgba(0,0,0,0) 100%);
+}
+.corner-bl {
+  background: radial-gradient(ellipse at bottom left, rgba(33,0,0,0.13) 20%, rgba(0,0,0,0) 100%);
+}
+.corner-br {
+  background: radial-gradient(ellipse at bottom right, rgba(33,0,0,0.13) 20%, rgba(0,0,0,0) 100%);
+}
+
+/* Title bar */
+.title-bar {
+  -webkit-app-region: drag;
+}
+.title-bar button {
+  -webkit-app-region: no-drag;
+}
