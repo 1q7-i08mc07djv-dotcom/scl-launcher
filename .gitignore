@@ -4,6 +4,7 @@
 x64/
 SCL/
 dist/
+release/
 libs/
 *.c
 *.cpp

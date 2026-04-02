@@ -99,12 +99,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {/* Right: Backend start + Theme toggle + version + controls */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                const bat = 'C:\\Users\\Doudou\\WorkBuddy\\20260401175534\\start-backend.bat';
-                window.open(
-                  `cmd.exe /c start /min "" "${bat}"`,
-                  '_blank'
-                );
+              onClick={async () => {
+                if (window.electronAPI) {
+                  await window.electronAPI.startBackend();
+                } else {
+                  const bat = 'C:\\Users\\Doudou\\WorkBuddy\\20260401175534\\start-backend.bat';
+                  window.open(`cmd.exe /c start /min "" "${bat}"`, '_blank');
+                }
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
               style={{
@@ -136,14 +137,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
               logo={ICONS.minimize}
               theme="white"
               size={28}
-              onClick={() => {}}
+              onClick={() => window.electronAPI?.minimize()}
               tooltip="最小化"
             />
             <MyIconButton
               logo={ICONS.close}
               theme="white"
               size={28}
-              onClick={() => {}}
+              onClick={() => window.electronAPI?.close()}
               tooltip="关闭"
             />
           </div>
