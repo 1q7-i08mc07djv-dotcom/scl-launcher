@@ -25,28 +25,24 @@ export default function MyRadioButton({
 
   return (
     <div
-      className={`
-        flex items-center rounded-full cursor-pointer select-none
-        transition-all duration-150
-        ${className}
-      `}
+      className={`flex items-center rounded-full cursor-pointer select-none transition-all duration-150 ${className}`}
       style={{ margin }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => onChange?.(!checked)}
     >
       <div
-        className={`
-          flex items-center rounded-full px-3 py-1
-          transition-all duration-150 border
-          ${checked
-            ? 'bg-pcl-highlight/30 border-pcl-highlight text-white'
+        className="flex items-center rounded-full transition-all duration-150 border"
+        style={{
+          padding,
+          backgroundColor: checked
+            ? 'color-mix(in srgb, var(--color-highlight) 20%, transparent)'
             : hovered
-              ? 'bg-white/10 border-white/30 text-white'
-              : 'bg-transparent border-transparent text-white/70'
-          }
-        `}
-        style={{ padding }}
+              ? 'color-mix(in srgb, var(--color-text) 10%, transparent)'
+              : 'transparent',
+          borderColor: checked ? 'var(--color-highlight)' : hovered ? 'color-mix(in srgb, var(--color-text) 30%, transparent)' : 'transparent',
+          color: checked ? 'var(--color-text)' : hovered ? 'var(--color-text)' : 'color-mix(in srgb, var(--color-text) 70%, transparent)',
+        }}
       >
         {logo && (
           <svg

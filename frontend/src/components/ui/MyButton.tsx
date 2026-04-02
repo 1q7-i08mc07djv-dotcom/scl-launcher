@@ -11,9 +11,9 @@ interface MyButtonProps {
 }
 
 const colorMap = {
-  highlight: 'bg-pcl-highlight hover:bg-pcl-highlight-hover text-white border-blue-500',
-  red: 'bg-red-500 hover:bg-red-600 text-white border-red-600',
-  black: 'bg-pcl-semi-transparent hover:bg-gray-600 text-white border-pcl-gray1',
+  highlight: 'bg-pcl-highlight hover:bg-pcl-highlight-hover text-white border-blue-400',
+  red: 'bg-pcl-red hover:opacity-80 text-white border-red-600',
+  black: 'bg-pcl-semi-transparent hover:bg-pcl-gray2 text-pcl-text border-pcl-border',
 };
 
 export default function MyButton({
@@ -43,13 +43,14 @@ export default function MyButton({
         cursor: disabled ? 'not-allowed' : 'pointer',
         transform: pressed ? 'scale(0.97)' : hovered ? 'scale(1.02)' : 'scale(1)',
         transition: 'transform 0.1s ease',
+        color: 'var(--color-text)',
       }}
       className={`
         rounded-pclBtn border
         ${colorMap[colorType]}
         ${className}
         flex items-center justify-center
-        focus:outline-none
+        focus:outline-none px-4
       `}
     >
       <span className="text-sm font-medium select-none">{text}</span>

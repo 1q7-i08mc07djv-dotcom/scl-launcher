@@ -5,11 +5,9 @@ interface MyCardProps {
   title: string;
   children: React.ReactNode;
   canSwap?: boolean;
-  isSwapped?: boolean;
   defaultSwapped?: boolean;
   onSwap?: (swapped: boolean) => void;
   className?: string;
-  useAnimation?: boolean;
   hasMouseAnimation?: boolean;
 }
 
@@ -20,7 +18,6 @@ export default function MyCard({
   defaultSwapped = false,
   onSwap,
   className = '',
-  useAnimation = true,
   hasMouseAnimation = true,
 }: MyCardProps) {
   const [swapped, setSwapped] = useState(defaultSwapped);
@@ -28,52 +25,40 @@ export default function MyCard({
 
   const handleSwap = () => {
     if (!canSwap) return;
-    const newSwapped = !swapped;
-    setSwapped(newSwapped);
-    onSwap?.(newSwapped);
+    const next = !swapped;
+    setSwapped(next);
+    onSwap?.(next);
   };
 
   return (
     <div
       className={`
-        rounded-pcl bg-pcl-card border border-pcl-border
-        ${hasMouseAnimation && hovered ? 'bg-pcl-card-hover' : ''}
+        rounded-pcl border
+        ${hasMouseAnimation && hovered ? 'bg-pcl-card-hover' : 'bg-pcl-card'}
         ${className}
       `}
+      style={{ borderColor: 'var(--color-border)', boxShadow: '0 1px 3px var(--shadow-color)' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        transition: useAnimation ? 'background-color 0.2s ease' : 'none',
-      }}
     >
-      {/* Card Title Bar */}
+      {/* Title bar */}
       <div
-        className={`
-          flex items-center px-4 py-2.5 rounded-t-pcl
-          border-b border-pcl-border
-          ${canSwap ? 'cursor-pointer select-none' : ''}
-        `}
+        className={`flex items-center px-4 py-2.5 rounded-t-pcl cursor-default ${canSwap ? 'cursor-pointer' : ''}`}
+        style={{ borderBottom: canSwap && !swapped ? '1px solid var(--color-border)' : 'none' }}
         onClick={handleSwap}
       >
         {canSwap && (
-          <span className="mr-2 text-pcl-text-secondary">
-            {swapped ? (
-              <ChevronRight size={14} />
-            ) : (
-              <ChevronDown size={14} />
-            )}
+          <span className="mr-2" style={{ color: 'var(--color-text-secondary)' }}>
+            {swapped ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
           </span>
         )}
-        <span className="text-sm font-medium text-white">{title}</span>
+        <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{title}</span>
       </div>
 
-      {/* Card Content */}
-      {(!canSwap || !swapped) && (
-        <div className="p-5">
-          {children}
-        </div>
-      )}
+      {/* Content */}
+      {!canSwap || !swapped ? (
+        <div className="p-5">{children}</div>
+      ) : null}
     </div>
   );
 }

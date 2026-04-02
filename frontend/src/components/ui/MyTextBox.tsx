@@ -32,9 +32,9 @@ export default function MyTextBox({
       placeholder={placeholder}
       className={`
         w-full h-8 px-3 rounded border text-sm
-        bg-pcl-semi-transparent text-white
+        bg-pcl-semi-transparent text-pcl-text
         placeholder:text-white/30
-        border-pcl-gray1
+        border-pcl-border
         focus:outline-none focus:border-pcl-highlight
         transition-colors duration-150
         ${className}

@@ -28,10 +28,10 @@ export default function MyIconButton({
 }: MyIconButtonProps) {
   const [hovered, setHovered] = useState(false);
 
-  const color = themeColor[theme];
+  const baseColor = themeColor[theme];
   const displayColor = hovered && (theme === 'white' || theme === 'black')
     ? theme === 'white' ? '#CCCCCC' : '#777777'
-    : color;
+    : baseColor;
 
   return (
     <div className="relative">
@@ -39,12 +39,7 @@ export default function MyIconButton({
         onClick={onClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className={`
-          flex items-center justify-center rounded-full
-          transition-all duration-100 cursor-pointer
-          ${hovered ? 'bg-white/10' : ''}
-          ${className}
-        `}
+        className={`flex items-center justify-center rounded-full transition-all duration-100 cursor-pointer ${hovered ? 'bg-white/10' : ''} ${className}`}
         style={{ width: size, height: size }}
       >
         <svg
@@ -58,9 +53,13 @@ export default function MyIconButton({
       </button>
       {tooltip && hovered && (
         <div
-          className="absolute top-full mt-1 left-1/2 -translate-x-1/2
-            bg-pcl-gray1 text-white text-xs px-2 py-1 rounded
-            whitespace-nowrap z-50 pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 px-2 py-1 rounded text-xs z-50 pointer-events-none whitespace-nowrap"
+          style={{
+            top: '100%',
+            marginTop: '4px',
+            backgroundColor: 'var(--color-gray1)',
+            color: 'var(--color-text)',
+          }}
         >
           {tooltip}
         </div>

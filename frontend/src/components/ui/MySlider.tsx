@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface MySliderProps {
   value?: number;
@@ -33,17 +33,16 @@ export default function MySlider({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       {label && (
-        <span className="text-sm text-white/70 whitespace-nowrap">{label}</span>
+        <span className="text-sm whitespace-nowrap" style={{ color: 'var(--color-text-secondary)' }}>
+          {label}
+        </span>
       )}
       <div className="relative flex-1 h-6 flex items-center">
-        {/* Track background */}
-        <div className="absolute w-full h-1 bg-pcl-gray1 rounded-full" />
-        {/* Track filled */}
+        <div className="absolute w-full h-1 rounded-full" style={{ backgroundColor: 'var(--color-gray1)' }} />
         <div
-          className="absolute h-1 bg-pcl-highlight rounded-full"
-          style={{ width: `${percentage}%` }}
+          className="absolute h-1 rounded-full"
+          style={{ width: `${percentage}%`, backgroundColor: 'var(--color-highlight)' }}
         />
-        {/* Thumb */}
         <input
           type="range"
           min={min}
@@ -51,22 +50,21 @@ export default function MySlider({
           step={step}
           value={value}
           onChange={handleChange}
-          className="
-            absolute w-full h-full opacity-0 cursor-pointer
-            appearance-none z-10
-          "
+          className="absolute w-full h-full opacity-0 cursor-pointer appearance-none z-10"
           style={{ WebkitAppearance: 'none' }}
         />
         <div
-          className="
-            absolute w-3 h-3 rounded-full bg-white
-            border border-pcl-highlight
-            pointer-events-none
-          "
-          style={{ left: `calc(${percentage}% - 6px)` }}
+          className="absolute w-3 h-3 rounded-full pointer-events-none border-2"
+          style={{
+            left: `calc(${percentage}% - 6px)`,
+            backgroundColor: 'white',
+            borderColor: 'var(--color-highlight)',
+          }}
         />
       </div>
-      <span className="text-sm text-white/70 w-10 text-right">{value}</span>
+      <span className="text-sm w-10 text-right" style={{ color: 'var(--color-text-secondary)' }}>
+        {value}
+      </span>
     </div>
   );
 }

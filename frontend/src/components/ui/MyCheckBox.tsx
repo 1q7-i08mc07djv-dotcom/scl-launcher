@@ -16,29 +16,21 @@ export default function MyCheckBox({
   const [internalChecked, setInternalChecked] = useState(false);
   const checked = controlledChecked !== undefined ? controlledChecked : internalChecked;
 
-  const handleClick = () => {
-    const newChecked = !checked;
-    setInternalChecked(newChecked);
-    onChange?.(newChecked);
-  };
-
   return (
     <div
-      className={`
-        flex items-center gap-2 cursor-pointer select-none
-        ${className}
-      `}
-      onClick={handleClick}
+      className={`flex items-center gap-2 cursor-pointer select-none ${className}`}
+      onClick={() => {
+        const next = !checked;
+        setInternalChecked(next);
+        onChange?.(next);
+      }}
     >
       <div
-        className={`
-          w-4 h-4 rounded border flex items-center justify-center
-          transition-colors duration-150
-          ${checked
-            ? 'bg-pcl-highlight border-pcl-highlight'
-            : 'bg-transparent border-pcl-gray1 hover:border-pcl-highlight'
-          }
-        `}
+        className="w-4 h-4 rounded border flex items-center justify-center transition-colors duration-150"
+        style={{
+          backgroundColor: checked ? 'var(--color-highlight)' : 'transparent',
+          borderColor: checked ? 'var(--color-highlight)' : 'var(--color-gray1)',
+        }}
       >
         {checked && (
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -53,7 +45,7 @@ export default function MyCheckBox({
         )}
       </div>
       {label && (
-        <span className="text-sm text-white/80">{label}</span>
+        <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
       )}
     </div>
   );

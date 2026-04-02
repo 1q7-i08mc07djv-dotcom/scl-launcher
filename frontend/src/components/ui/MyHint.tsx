@@ -1,14 +1,10 @@
-
-
-type HintTheme = 'blue' | 'yellow' | 'red' | 'default';
-
 interface MyHintProps {
   text: string;
-  theme?: HintTheme;
+  theme?: 'blue' | 'yellow' | 'red' | 'default';
   className?: string;
 }
 
-const themeStyles: Record<HintTheme, string> = {
+const themeStyles: Record<string, string> = {
   blue: 'bg-blue-500/20 border-blue-500/50 text-blue-300',
   yellow: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-200',
   red: 'bg-red-500/20 border-red-500/50 text-red-300',
@@ -18,11 +14,7 @@ const themeStyles: Record<HintTheme, string> = {
 export default function MyHint({ text, theme = 'default', className = '' }: MyHintProps) {
   return (
     <div
-      className={`
-        px-3 py-2 rounded border text-sm
-        ${themeStyles[theme]}
-        ${className}
-      `}
+      className={`px-3 py-2 rounded border text-sm ${themeStyles[theme] ?? themeStyles.default} ${className}`}
     >
       {text}
     </div>

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type NavTab = 'launch' | 'download' | 'settings' | 'tools';
+export type Theme = 'dark' | 'light';
 
 export interface Account {
   id: string;
@@ -18,12 +19,17 @@ export interface GameVersion {
   version: string;
   minecraftVersion: string;
   downloaded: boolean;
+  path?: string;
 }
 
 export interface AppState {
   // Navigation
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
+
+  // Theme
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
 
   // Accounts
   accounts: Account[];
@@ -66,11 +72,12 @@ export interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      // Navigation
       activeTab: 'launch',
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      // Accounts
+      theme: 'dark',
+      setTheme: (theme) => set({ theme }),
+
       accounts: [],
       currentAccount: null,
       addAccount: (account) =>
@@ -83,13 +90,11 @@ export const useAppStore = create<AppState>()(
         })),
       setCurrentAccount: (account) => set({ currentAccount: account }),
 
-      // Game versions
       versions: [],
       selectedVersion: null,
       setVersions: (versions) => set({ versions }),
       setSelectedVersion: (version) => set({ selectedVersion: version }),
 
-      // Settings
       language: localStorage.getItem('scl-lang') || 'zh-CN',
       setLanguage: (lang) => {
         localStorage.setItem('scl-lang', lang);
@@ -108,7 +113,6 @@ export const useAppStore = create<AppState>()(
       autoJava: true,
       setAutoJava: (autoJava) => set({ autoJava }),
 
-      // Launching state
       isLaunching: false,
       setIsLaunching: (isLaunching) => set({ isLaunching }),
       launchStep: '',
@@ -119,6 +123,7 @@ export const useAppStore = create<AppState>()(
     {
       name: 'scl-storage',
       partialize: (state) => ({
+        theme: state.theme,
         language: state.language,
         javaPath: state.javaPath,
         memory: state.memory,
