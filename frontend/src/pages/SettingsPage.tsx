@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store/useAppStore';
-import { configApi } from '../api';
+import { configApi, ApiError } from '../api';
 import type { AppConfig } from '../api';
 import MyCard from '../components/ui/MyCard';
 import MyTextBox from '../components/ui/MyTextBox';
@@ -59,19 +59,20 @@ export default function SettingsPage() {
   const loadConfig = useCallback(async () => {
     try {
       const cfg: AppConfig = await configApi.get();
-      setLocalJavaPath(cfg.javaPath);
-      setLocalMemory(parseInt(cfg.memory.replace('G', '').replace('M', '')) || 2);
-      setLocalJvmArgs(cfg.jvmArgs);
-      setLocalGitcodeToken(cfg.gitcodeToken);
-      setLocalAutoJava(cfg.autoJava);
-      setLocalDownloadSource(cfg.downloadSource);
-      setLocalLanguage(cfg.language);
-      setJavaPath(cfg.javaPath); setMemory(cfg.memory); setJvmArgs(cfg.jvmArgs);
-      setGitcodeToken(cfg.gitcodeToken); setAutoJava(cfg.autoJava);
-      setDownloadSource(cfg.downloadSource); setLanguage(cfg.language);
-      i18n.changeLanguage(cfg.language);
+      setLocalJavaPath(cfg.javaPath ?? '');
+      setLocalMemory(parseInt((cfg.memory ?? '2G').replace('G', '').replace('M', '')) || 2);
+      setLocalJvmArgs(cfg.jvmArgs ?? '');
+      setLocalGitcodeToken(cfg.gitcodeToken ?? '');
+      setLocalAutoJava(cfg.autoJava ?? true);
+      setLocalDownloadSource(cfg.downloadSource ?? 'BMCLAPI');
+      setLocalLanguage(cfg.language ?? 'zh-CN');
+      if (cfg.theme) setLocalTheme(cfg.theme as 'dark' | 'light');
+      setJavaPath(cfg.javaPath ?? ''); setMemory(cfg.memory ?? '2G'); setJvmArgs(cfg.jvmArgs ?? '');
+      setGitcodeToken(cfg.gitcodeToken ?? ''); setAutoJava(cfg.autoJava ?? true);
+      setDownloadSource(cfg.downloadSource ?? 'BMCLAPI'); setLanguage(cfg.language ?? 'zh-CN');
+      i18n.changeLanguage(cfg.language ?? 'zh-CN');
     } catch (e) {
-      console.error('Failed to load config:', e);
+      // use defaults if backend not running
     } finally {
       setLoading(false);
     }
@@ -82,6 +83,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     const config: AppConfig = {
       language: localLanguage,
+      theme: localTheme,
       javaPath: localJavaPath,
       autoJava: localAutoJava,
       memory: `${localMemory}G`,
@@ -91,16 +93,18 @@ export default function SettingsPage() {
     };
     try {
       await configApi.save(config);
-      setJavaPath(localJavaPath); setMemory(`${localMemory}G`); setJvmArgs(localJvmArgs);
-      setGitcodeToken(localGitcodeToken); setAutoJava(localAutoJava);
-      setDownloadSource(localDownloadSource); setLanguage(localLanguage);
-      setTheme(localTheme);
-      i18n.changeLanguage(localLanguage);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } catch (e) {
-      console.error('Failed to save config:', e);
+      if (e instanceof ApiError && e.isNetworkError) {
+        // Save locally only if backend not running
+      }
     }
+    setJavaPath(localJavaPath); setMemory(`${localMemory}G`); setJvmArgs(localJvmArgs);
+    setGitcodeToken(localGitcodeToken); setAutoJava(localAutoJava);
+    setDownloadSource(localDownloadSource); setLanguage(localLanguage);
+    setTheme(localTheme);
+    i18n.changeLanguage(localLanguage);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (

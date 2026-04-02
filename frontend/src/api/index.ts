@@ -1,21 +1,14 @@
 const API_BASE = 'http://localhost:8765/api';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `HTTP ${res.status}`);
-  }
-  return res.json();
+// ─── API Error ──────────────────────────────────────────────
+export class ApiError {
+  constructor(
+    public message: string,
+    public isNetworkError: boolean = false
+  ) {}
 }
 
-// ─── Accounts ───────────────────────────────────────────────
+// ─── Shared types ────────────────────────────────────────────
 export interface Account {
   id: string;
   type: string;
@@ -24,13 +17,6 @@ export interface Account {
   token?: string;
 }
 
-export const accountApi = {
-  list: () => request<Account[]>('/accounts'),
-  add: (account: Partial<Account>) => request<Account>('/accounts', { method: 'POST', body: JSON.stringify(account) }),
-  delete: (id: string) => request('/accounts/' + id, { method: 'DELETE' }),
-};
-
-// ─── Versions ────────────────────────────────────────────────
 export interface GameVersion {
   id: string;
   name: string;
@@ -41,6 +27,49 @@ export interface GameVersion {
   path?: string;
 }
 
+export interface AppConfig {
+  language?: string;
+  theme?: string;
+  javaPath?: string;
+  autoJava?: boolean;
+  memory?: string;
+  jvmArgs?: string;
+  downloadSource?: string;
+  gitcodeToken?: string;
+}
+
+// ─── Request helper ─────────────────────────────────────────
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new ApiError(body.error || `HTTP ${res.status}`);
+    }
+    return res.json();
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    if (e instanceof TypeError) {
+      throw new ApiError('后端服务未启动，请先运行 start-dev.bat 启动后端', true);
+    }
+    throw new ApiError((e as Error).message || '请求失败');
+  }
+}
+
+// ─── Accounts ───────────────────────────────────────────────
+export const accountApi = {
+  list: () => request<Account[]>('/accounts'),
+  add: (account: Partial<Account>) => request<Account>('/accounts', { method: 'POST', body: JSON.stringify(account) }),
+  delete: (id: string) => request('/accounts/' + id, { method: 'DELETE' }),
+};
+
+// ─── Versions ────────────────────────────────────────────────
 export const versionApi = {
   list: (type?: string) => request<GameVersion[]>(`/versions${type ? '?type=' + type : ''}`),
   downloaded: () => request<GameVersion[]>('/versions/downloaded'),
@@ -49,16 +78,6 @@ export const versionApi = {
 };
 
 // ─── Config ──────────────────────────────────────────────────
-export interface AppConfig {
-  language: string;
-  javaPath: string;
-  autoJava: boolean;
-  memory: string;
-  jvmArgs: string;
-  downloadSource: string;
-  gitcodeToken: string;
-}
-
 export const configApi = {
   get: () => request<AppConfig>('/config'),
   save: (cfg: AppConfig) => request('/config', { method: 'POST', body: JSON.stringify(cfg) }),

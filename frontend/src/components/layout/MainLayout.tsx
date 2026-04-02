@@ -4,6 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import type { NavTab } from '../../store/useAppStore';
 import MyRadioButton from '../ui/MyRadioButton';
 import MyIconButton from '../ui/MyIconButton';
+import StatusBar from '../layout/StatusBar';
 
 const ICONS = {
   launch: 'M52.1,164.5c-1.4,0-3.1-0.5-4.2-1.3c-2.6-1.7-4-4.2-4-7V43.8c0-2.9,1.6-5.8,4.1-7c1.2-0.8,2.7-1.2,4.1-1.2c1.5,0,2.9,0.4,4.2,1.2L153.1,93c0,0,0.1,0,0.1,0.1c2.6,1.7,4,4.2,4,7c0,3-1.7,5.8-4.2,7.1l-96.8,56.2C55.1,164,53.5,164.5,52.1,164.5z M60.4,142.1l72.1-42.1L60.4,58.2V142.1z',
@@ -128,10 +129,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Content */}
-        <div className="flex w-full" style={{ height: 'calc(100% - 48px)' }}>
+        <div className="flex flex-col w-full" style={{ height: 'calc(100% - 48px)' }}>
           <div className="flex-1 overflow-hidden">
             {children}
           </div>
+          <StatusBar />
         </div>
       </div>
     </div>
