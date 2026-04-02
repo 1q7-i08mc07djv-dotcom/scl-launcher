@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Play } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { NavTab } from '../../store/useAppStore';
 import MyRadioButton from '../ui/MyRadioButton';
@@ -95,8 +96,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
             ))}
           </div>
 
-          {/* Right: Theme toggle + version + controls */}
+          {/* Right: Backend start + Theme toggle + version + controls */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const bat = 'C:\\Users\\Doudou\\WorkBuddy\\20260401175534\\start-backend.bat';
+                window.open(
+                  `cmd.exe /c start /min "" "${bat}"`,
+                  '_blank'
+                );
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-highlight) 30%, transparent)',
+                border: '1px solid var(--color-highlight)',
+                color: 'var(--color-highlight)',
+              }}
+              title="启动后端服务"
+            >
+              <Play size={12} />
+              启动后端
+            </button>
+
             <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
               {version}
             </span>
