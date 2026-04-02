@@ -3,8 +3,10 @@
   "productName": "SCL Launcher",
   "version": "1.0.0",
   "description": "SCL Minecraft Launcher - A modern Minecraft launcher",
-  "author": { "name": "SCL Team" },
-  "main": "electron/main.cjs",
+  "author": {
+    "name": "SCL Team"
+  },
+  "main": "package.json",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,9 +14,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron:dev": "vite build && electron .",
-    "electron:build": "vite build && electron-builder --win --dir",
-    "electron:dist": "vite build && electron-builder --win"
+    "electron:build": "vite build && node scripts/build-electron.js && electron-builder --projectDir dist --win --dir",
+    "electron:dist": "vite build && node scripts/build-electron.js && electron-builder --projectDir dist --win",
+    "electron:rebuild": "electron-builder --projectDir dist --win --dir"
   },
   "dependencies": {
     "i18next": "^26.0.3",
@@ -31,7 +33,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.27",
-    "electron": "^41.1.1",
+    "electron": "41.1.1",
     "electron-builder": "^26.8.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -47,12 +49,11 @@
     "appId": "com.scl.launcher",
     "productName": "SCL Launcher",
     "directories": {
-      "output": "release"
+      "output": "../release",
+      "root": "app"
     },
     "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "start-backend.bat"
+      "package.json"
     ],
     "extraResources": [
       {
@@ -60,25 +61,16 @@
         "to": "start-backend.bat"
       }
     ],
+    "asar": false,
     "win": {
       "target": [
         {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
         }
-      ],
-      "icon": null
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      ]
     },
     "portable": {
       "artifactName": "${productName}-${version}-portable.exe"
