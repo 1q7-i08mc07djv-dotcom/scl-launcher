@@ -16,6 +16,7 @@
     "preview": "vite preview",
     "electron:build": "vite build && node scripts/build-electron.js && electron-builder --projectDir dist --win --dir",
     "electron:dist": "vite build && node scripts/build-electron.js && electron-builder --projectDir dist --win",
+    "electron:sign": "node scripts/sign-exe.js",
     "electron:rebuild": "electron-builder --projectDir dist --win --dir"
   },
   "dependencies": {

@@ -89,3 +89,7 @@ const appPkg = {
 writeFileSync(join(distDir, 'package.json'), JSON.stringify(appPkg, null, 2));
 console.log('[build] Created dist/package.json');
 console.log('[build] Done!');
+
+console.log('[build] Build complete!');
+console.log('[build] To sign the exe, run: node scripts/sign-exe.js');
+console.log('[build] For production signing, set SCL_SIGN_CERT_PATH and SCL_SIGN_CERT_PASSWORD env vars');
