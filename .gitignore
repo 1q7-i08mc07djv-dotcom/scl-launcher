@@ -21,6 +21,7 @@ build*.bat
 compile*.bat
 package*.bat
 start*.bat
+!frontend/start-backend.bat
 *.gradle
 *.xml
 COMPILE_ONLINE.md

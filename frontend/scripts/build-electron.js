@@ -1,12 +1,15 @@
 // scripts/build-electron.js
 import { mkdirSync, cpSync, rmSync, existsSync, writeFileSync } from 'fs';
+import { execSync } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
-const resourcesDir = join(distDir, '..', 'resources'); // win-unpacked/resources/
+const backendDir = join(root, '..', 'backend');
+const backendJarSrc = join(backendDir, 'build', 'libs', 'scl-backend-1.0.0.jar');
+const backendJarDst = join(distDir, 'scl-backend-1.0.0.jar');
 
 console.log('[build] Preparing dist/ as electron app bundle...');
 
@@ -15,16 +18,38 @@ if (!existsSync(join(distDir, 'index.html'))) {
   process.exit(1);
 }
 
-try { rmSync(join(root, 'release'), { recursive: true, force: true }); } catch {}
+// Build backend if jar doesn't exist
+if (!existsSync(backendJarSrc)) {
+  console.log('[build] Building backend jar...');
+  try {
+    execSync('cd "' + backendDir + '" && .\\gradlew.bat build --no-daemon', { stdio: 'inherit', windowsHide: true });
+  } catch (e) {
+    console.error('[build] Backend build failed:', e.message);
+    process.exit(1);
+  }
+}
+
+// Copy backend jar to dist/
+cpSync(backendJarSrc, backendJarDst);
+console.log('[build] Copied backend jar to dist/');
 
 // Copy electron files into dist/
 cpSync(join(root, 'electron', 'main.cjs'), join(distDir, 'main.cjs'));
 cpSync(join(root, 'electron', 'preload.js'), join(distDir, 'preload.js'));
 console.log('[build] Copied main.cjs, preload.js');
 
-// Copy start-backend.bat to dist/ (electron-builder extraResources picks it up from here)
-cpSync(join(root, 'start-backend.bat'), join(distDir, 'start-backend.bat'));
-console.log('[build] Copied start-backend.bat');
+// Copy start-backend.bat to dist/
+const batContent = `@echo off
+cd /d "%~dp0"
+echo Starting SCL Backend...
+start "" javaw -jar "%~dp0scl-backend-1.0.0.jar"
+`;
+writeFileSync(join(distDir, 'start-backend.bat'), batContent);
+console.log('[build] Created start-backend.bat');
+
+// Also update root frontend/start-backend.bat
+writeFileSync(join(root, 'start-backend.bat'), batContent);
+console.log('[build] Updated root start-backend.bat');
 
 // Create package.json in dist/ for electron-builder
 const appPkg = {
@@ -48,7 +73,8 @@ const appPkg = {
       'favicon.svg',
       'icons.svg',
       'assets',
-      'start-backend.bat'
+      'start-backend.bat',
+      'scl-backend-1.0.0.jar'
     ],
     win: {
       target: [
