@@ -1,0 +1,55 @@
+SCL Launcher - A modern Minecraft launcher
+Copyright (c) 2026 SCL Team
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+
+SPECIAL ADDITION TO GPL LICENSE:
+
+Notwithstanding the above, if the project owner (the "Owner") explicitly 
+grants permission in writing (including but not limited to email, 
+Discord, GitHub issue comment, or any other written communication), 
+you may:
+
+  1. Change or modify the Open Source License of this project; or
+  2. Use this project or any portion of its code for commercial 
+     or business purposes.
+
+Until and unless such explicit written permission is obtained from the 
+Owner, you are strictly prohibited from:
+
+  - Using this project for any commercial or business purpose
+  - Changing the license terms
+
+Any person who obtains permission as described above is encouraged to 
+document and retain a copy of such permission for their records.
+
+================================================================================
+
+THIRD-PARTY COMPONENTS:
+
+This project includes the following third-party open source components
+governed by their respective licenses:
+
+- React (MIT License)
+- Vite (MIT License)  
+- Tailwind CSS (MIT License)
+- Zustand (MIT License)
+- i18next (MIT License)
+- lucide-react (ISC License)
+- Spring Boot (Apache License 2.0)
+- OkHttp (Apache License 2.0)
+
+All third-party components retain their original licenses.
