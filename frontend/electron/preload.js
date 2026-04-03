@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFolder: (path) => ipcRenderer.invoke('open-folder', path),
   openLog: () => ipcRenderer.invoke('open-log'),
 
+  // Microsoft Auth (Device Code Flow)
+  microsoftAuthStart: () => ipcRenderer.invoke('microsoft-auth-start'),
+  microsoftAuthCallback: (code) => ipcRenderer.invoke('microsoft-auth-callback', code),
+
   // App info
   getAppPath: () => __dirname,
 });

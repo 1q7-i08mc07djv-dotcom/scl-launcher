@@ -5,6 +5,7 @@ import { accountApi, versionApi, launchApi, configApi, ApiError } from '../api';
 import type { Account, AppConfig } from '../api';
 import MyButton from '../components/ui/MyButton';
 import MyLoading from '../components/ui/MyLoading';
+import MicrosoftLoginDialog from '../components/ui/MicrosoftLoginDialog';
 import { User, Plus } from 'lucide-react';
 
 const DEMO_VERSIONS = [
@@ -41,6 +42,7 @@ export default function LaunchPage() {
   const [showAccountPanel, setShowAccountPanel] = useState(false);
   const [loginType, setLoginType] = useState<'offline' | 'microsoft' | 'thirdparty'>('offline');
   const [username, setUsername] = useState('');
+  const [showMicrosoftDialog, setShowMicrosoftDialog] = useState(false);
   const [loadingVersions, setLoadingVersions] = useState(true);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [backendError, setBackendError] = useState<string | null>(null);
@@ -236,8 +238,16 @@ export default function LaunchPage() {
               )}
 
               {loginType === 'microsoft' && (
-                <div className="mb-3 text-xs text-center py-2" style={{ color: 'var(--color-text-secondary)' }}>
-                  {t('launch.microsoft')} - {t('common.loading')}
+                <div className="mb-3 space-y-2">
+                  <div className="text-xs text-center py-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    使用 Microsoft 账户登录正版 Minecraft
+                  </div>
+                  <MyButton
+                    text="登录 Microsoft 账户"
+                    colorType="highlight"
+                    height={32}
+                    onClick={() => setShowMicrosoftDialog(true)}
+                  />
                 </div>
               )}
 
@@ -390,6 +400,29 @@ export default function LaunchPage() {
             <MyButton text={t('launch.cancel')} height={35} className="mt-4" onClick={() => setIsLaunching(false)} />
           </div>
         </div>
+      )}
+
+      {showMicrosoftDialog && (
+        <MicrosoftLoginDialog
+          onLoginSuccess={(account) => {
+            setAccounts((prev) => {
+              const existing = prev.find((a) => a.uuid === account.uuid);
+              if (existing) return prev;
+              const newAccount: Account = {
+                id: account.uuid,
+                type: 'microsoft',
+                username: account.username,
+                uuid: account.uuid,
+                token: account.token,
+              };
+              useAppStore.getState().setCurrentAccount(newAccount);
+              return [...prev, newAccount];
+            });
+            setShowMicrosoftDialog(false);
+            setShowAccountPanel(false);
+          }}
+          onCancel={() => setShowMicrosoftDialog(false)}
+        />
       )}
     </div>
   );
