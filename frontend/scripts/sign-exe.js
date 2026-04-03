@@ -3,7 +3,7 @@
 // Production: set SCL_SIGN_CERT_PATH and SCL_SIGN_CERT_PASSWORD env vars
 // Test: creates a self-signed certificate automatically (for testing only)
 
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, unlinkSync, readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -88,9 +88,6 @@ async function signFile(filePath, certFile, password) {
 }
 
 async function signDirectory(dirPath) {
-  const { readdirSync, statSync } = await import('fs');
-  const { join } = await import('path');
-
   const files = readdirSync(dirPath);
   for (const file of files) {
     const fullPath = join(dirPath, file);
@@ -98,7 +95,7 @@ async function signDirectory(dirPath) {
     if (stat.isDirectory()) {
       await signDirectory(fullPath);
     } else if (file.endsWith('.exe') || file.endsWith('.dll')) {
-      await signFile(fullPath, certFile, password);
+      await signFile(fullPath, _certFile, _password);
     }
   }
 }
@@ -111,6 +108,7 @@ async function main() {
   // Determine signing method
   let certFile = CERT_PATH;
   let password = CERT_PASSWORD;
+  let isTestCert = false;
 
   if (!certFile || !existsSync(certFile)) {
     log('No certificate provided or file not found.');
@@ -128,17 +126,36 @@ async function main() {
     }
     certFile = testCert.certFile;
     password = testCert.password;
+    isTestCert = true;
   }
 
+  // certFile is always defined at this point (either from env or test cert)
+  const _certFile = certFile;
+  const _password = password;
+
   // Sign the main exe
-  await signFile(exeFile, certFile, password);
+  await signFile(exeFile, _certFile, _password);
 
   // Also sign DLLs in the unpacked directory (not just resources/app)
-  await signDirectory(unpackedDir);
+  const { readdirSync, statSync } = await import('node:fs');
+  const { join: join2 } = await import('node:path');
+  const signDir = async (dir) => {
+    const files = readdirSync(dir);
+    for (const file of files) {
+      const fp = join2(dir, file);
+      const st = statSync(fp);
+      if (st.isDirectory()) {
+        await signDir(fp);
+      } else if (file.endsWith('.exe') || file.endsWith('.dll')) {
+        await signFile(fp, _certFile, _password);
+      }
+    }
+  };
+  await signDir(unpackedDir);
 
   // Clean up test certificate
-  if (certFile.includes('scl-test-cert')) {
-    try { unlinkSync(certFile); } catch {}
+  if (isTestCert) {
+    try { unlinkSync(_certFile); } catch {}
     const psFile = join(__dirname, '..', 'release', 'create-cert.ps1');
     try { unlinkSync(psFile); } catch {}
     log('Test certificate cleaned up.');

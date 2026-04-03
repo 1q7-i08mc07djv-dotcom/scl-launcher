@@ -1,20 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play } from 'lucide-react';
+import { Play, Rocket, Download, Settings, Wrench, Minus, X, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { NavTab } from '../../store/useAppStore';
-import MyRadioButton from '../ui/MyRadioButton';
-import MyIconButton from '../ui/MyIconButton';
 import StatusBar from '../layout/StatusBar';
-
-const ICONS = {
-  launch: 'M52.1,164.5c-1.4,0-3.1-0.5-4.2-1.3c-2.6-1.7-4-4.2-4-7V43.8c0-2.9,1.6-5.8,4.1-7c1.2-0.8,2.7-1.2,4.1-1.2c1.5,0,2.9,0.4,4.2,1.2L153.1,93c0,0,0.1,0,0.1,0.1c2.6,1.7,4,4.2,4,7c0,3-1.7,5.8-4.2,7.1l-96.8,56.2C55.1,164,53.5,164.5,52.1,164.5z M60.4,142.1l72.1-42.1L60.4,58.2V142.1z',
-  download: 'M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z',
-  settings: 'M940.4 463.7L773.3 174.2c-17.3-30-49.2-48.4-83.8-48.4H340.2c-34.6 0-66.5 18.5-83.8 48.4L89.2 463.7c-17.3 30-17.3 66.9 0 96.8L256.4 850c17.3 30 49.2 48.4 83.8 48.4h349.2c34.6 0 66.5-18.5 83.8-48.4l167.2-289.5c17.3-29.9 17.3-66.8 0-96.8z',
-  tools: 'M623.0016 208.5376c-103.6288-103.6288-269.4144-103.6288-352.256-20.736L415.744 332.8512 332.8 415.7952 187.8016 270.6944c-82.944 82.944-82.944 248.6784 20.736 352.3072 66.56 66.6112 158.9248 88.32 276.8896 64.9728l13.2608-2.7648 198.656 198.656a41.472 41.472 0 0 0 54.7328 3.4304l3.8912-3.4304 127.8976-127.8976a41.472 41.472 0 0 0 3.4304-54.7328l-3.4304-3.8912-198.656-198.656c27.648-124.3648 6.912-221.0816-62.208-290.1504z',
-  close: 'M1097 584 250 584 562 896C591 925 591 972 562 1001 533 1030 487 1030 458 1001L21 565C6 550-0 531 0 511L0 511 0 511C-0 492 6 472 21 457L458 21C487-7 533-7 562 21 591 50 591 97 562 126L250 438 1097 438C1137 438 1170 471 1170 511 1170 551 1137 584 1097 584L1097 584Z',
-  minimize: 'M0,0 h15 v2 h-15 v-2 Z',
-};
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -23,13 +12,13 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const { t } = useTranslation();
   const { activeTab, setActiveTab, theme, setTheme } = useAppStore();
-  const [version] = useState('2.14.0 (社区版)');
+  const [version] = useState('1.0.0');
 
-  const tabs: { key: NavTab; icon: string; label: string }[] = [
-    { key: 'launch', icon: ICONS.launch, label: t('nav.launch') },
-    { key: 'download', icon: ICONS.download, label: t('nav.download') },
-    { key: 'settings', icon: ICONS.settings, label: t('nav.settings') },
-    { key: 'tools', icon: ICONS.tools, label: t('nav.tools') },
+  const tabs: { key: NavTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'launch', label: t('nav.launch'), icon: <Rocket size={18} /> },
+    { key: 'download', label: t('nav.download'), icon: <Download size={18} /> },
+    { key: 'settings', label: t('nav.settings'), icon: <Settings size={18} /> },
+    { key: 'tools', label: t('nav.tools'), icon: <Wrench size={18} /> },
   ];
 
   const toggleTheme = () => {
@@ -82,22 +71,52 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Center: Navigation */}
-          <div className="flex items-center">
+          <div className="flex items-center" style={{ gap: 4 }}>
             {tabs.map((tab) => (
-              <MyRadioButton
+              <button
                 key={tab.key}
-                text={tab.label}
-                logo={tab.icon}
-                logoScale={0.9}
-                checked={activeTab === tab.key}
-                onChange={() => setActiveTab(tab.key)}
-                margin="0 4px"
-              />
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  height: 32,
+                  padding: '0 14px',
+                  borderRadius: 3,
+                  border: '1px solid',
+                  borderColor: activeTab === tab.key ? 'var(--color-highlight)' : 'var(--color-border)',
+                  backgroundColor: activeTab === tab.key
+                    ? 'color-mix(in srgb, var(--color-highlight) 20%, transparent)'
+                    : 'transparent',
+                  color: activeTab === tab.key ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  outline: 'none',
+                  transition: 'all 0.15s',
+                  fontFamily: 'inherit',
+                }}
+                onMouseEnter={e => {
+                  if (activeTab !== tab.key) {
+                    (e.target as HTMLElement).style.backgroundColor = 'color-mix(in srgb, var(--color-highlight) 10%, transparent)';
+                    (e.target as HTMLElement).style.borderColor = 'var(--color-highlight)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (activeTab !== tab.key) {
+                    (e.target as HTMLElement).style.backgroundColor = 'transparent';
+                    (e.target as HTMLElement).style.borderColor = 'var(--color-border)';
+                  }
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center' }}>{tab.icon}</span>
+                {tab.label}
+              </button>
             ))}
           </div>
 
           {/* Right: Backend start + Theme toggle + version + controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center" style={{ gap: 6 }}>
             <button
               onClick={async () => {
                 if (window.electronAPI) {
@@ -107,46 +126,99 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   window.open(`cmd.exe /c start /min "" "${bat}"`, '_blank');
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-opacity hover:opacity-80"
               style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-highlight) 30%, transparent)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                height: 28,
+                padding: '0 10px',
+                borderRadius: 3,
                 border: '1px solid var(--color-highlight)',
+                backgroundColor: 'color-mix(in srgb, var(--color-highlight) 20%, transparent)',
                 color: 'var(--color-highlight)',
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: 'pointer',
+                outline: 'none',
+                fontFamily: 'inherit',
               }}
               title="启动后端服务"
             >
-              <Play size={12} />
+              <Play size={11} />
               启动后端
             </button>
 
-            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            <span className="text-xs" style={{ color: 'var(--color-text-secondary)', fontSize: 11 }}>
               {version}
             </span>
 
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center w-8 h-8 rounded transition-colors"
-              style={{ color: 'var(--color-text-secondary)' }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text-secondary)',
+                cursor: 'pointer',
+                outline: 'none',
+                fontSize: 14,
+              }}
               title={theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
             </button>
 
-            <MyIconButton
-              logo={ICONS.minimize}
-              theme="white"
-              size={28}
+            {/* Minimize */}
+            <button
               onClick={() => window.electronAPI?.minimize()}
-              tooltip="最小化"
-            />
-            <MyIconButton
-              logo={ICONS.close}
-              theme="white"
-              size={28}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+              title="最小化"
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+            >
+              <Minus size={14} />
+            </button>
+
+            {/* Close */}
+            <button
               onClick={() => window.electronAPI?.close()}
-              tooltip="关闭"
-            />
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: 'var(--color-text)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+              title="关闭"
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239,68,68,0.8)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
+            >
+              <X size={14} />
+            </button>
           </div>
         </div>
 
