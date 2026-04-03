@@ -1,15 +1,16 @@
 # SCL Launcher
 
-A modern Minecraft launcher inspired by PCL Community Edition, built with a frontend-backend separation architecture.
+A modern Minecraft launcher built with a frontend-backend separation architecture.
 
 ![Java](https://img.shields.io/badge/Java-21-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
+![License](https://img.shields.io/badge/License-GPL%20v3-blue)
 
 ## Preview
 
-Dark and light themes supported, inspired by PCL Community Edition design.
+Dark and light themes supported.
 
 ## Tech Stack
 
@@ -20,6 +21,7 @@ Dark and light themes supported, inspired by PCL Community Edition design.
 | Frontend | Tailwind CSS | Dark/light theming |
 | Frontend | React-i18next | Chinese & English |
 | Frontend | Zustand | Lightweight state management |
+| Frontend | Electron 41 | Desktop application framework |
 | Backend | Spring Boot 3.2 | REST API service |
 | Backend | Java 21 | Runtime |
 | Backend | OkHttp | HTTP client |
@@ -35,6 +37,25 @@ Dark and light themes supported, inspired by PCL Community Edition design.
 - 🛠️ **Toolbox** — Memory optimization, cache cleaning, process management
 - 🌐 **i18n** — Chinese and English with instant switching
 - 💾 **Persistence** — All settings saved to `~/.SCL/`
+- 🔒 **Privacy** — No personal data uploaded, fully local storage
+
+## Download Release
+
+### Single-file Portable (Recommended)
+```
+frontend\release\SCL-Launcher-1.0.0-portable.exe
+```
+Double-click to run. Extracts and launches automatically.
+
+### Direct Run
+```
+frontend\dist\dist\win-unpacked\SCL Launcher.exe
+```
+
+### Archive
+```
+frontend\release\SCL-Launcher-1.0.0-win-unpacked.zip
+```
 
 ## Quick Start
 
@@ -72,27 +93,29 @@ Open **http://localhost:5173**
 
 ```
 scl-launcher/
-├── frontend/                    # React frontend
+├── frontend/                    # Electron frontend
 │   ├── src/
 │   │   ├── api/               # API client
 │   │   ├── components/         # UI components
-│   │   │   ├── layout/      # Main layout
-│   │   │   └── ui/          # PCL-style components
-│   │   ├── i18n/            # i18n (zh-CN / en-US)
-│   │   ├── pages/            # Page components
-│   │   └── store/           # State + theme
-│   └── ...
+│   │   │   ├── layout/        # Main layout
+│   │   │   └── ui/            # Reusable UI components
+│   │   ├── i18n/              # i18n (zh-CN / en-US)
+│   │   ├── pages/              # Page components
+│   │   └── store/             # State + theme
+│   ├── electron/               # Electron main process
+│   ├── scripts/                # Build scripts
+│   └── release/                # Release artifacts
 │
-├── backend/                  # Spring Boot backend
+├── backend/                    # Spring Boot backend
 │   └── src/main/java/com/scl/backend/
-│       ├── controller/        # REST API controllers
-│       ├── service/          # Business logic + mirrors
-│       ├── model/           # Data models
-│       └── config/          # CORS config
+│       ├── controller/          # REST API controllers
+│       ├── service/             # Business logic + mirrors
+│       ├── model/              # Data models
+│       └── config/             # CORS config
 │
-├── start-dev.bat             # Start both frontend + backend
-├── start-backend.bat          # Start backend only
-└── README.md / README-en.md
+├── start-dev.bat               # Start both frontend + backend
+├── start-backend.bat           # Start backend only
+└── README.md
 ```
 
 ## API Reference
@@ -163,4 +186,8 @@ Issues and Pull Requests are welcome!
 
 ## License
 
-This project is for educational purposes only. Minecraft is a trademark of Mojang Studios.
+This project is licensed under **GPL v3**. See [LICENSE](LICENSE) for details.
+
+> Special provision: Without explicit written permission from the project owner, this project may NOT be used for any commercial purpose or have its license modified.
+
+Minecraft is a trademark of Mojang Studios.

@@ -59,6 +59,14 @@ export interface AppState {
   setGitcodeToken: (token: string) => void;
   autoJava: boolean;
   setAutoJava: (auto: boolean) => void;
+  customUUID: string;
+  setCustomUUID: (uuid: string) => void;
+  customDownloadUrl: string;
+  setCustomDownloadUrl: (url: string) => void;
+  skinUrl: string;
+  setSkinUrl: (url: string) => void;
+  privacyAgreed: boolean;
+  setPrivacyAgreed: (agreed: boolean) => void;
 
   // Launching state
   isLaunching: boolean;
@@ -112,6 +120,14 @@ export const useAppStore = create<AppState>()(
       setGitcodeToken: (gitcodeToken) => set({ gitcodeToken }),
       autoJava: true,
       setAutoJava: (autoJava) => set({ autoJava }),
+      customUUID: '',
+      setCustomUUID: (customUUID) => set({ customUUID }),
+      customDownloadUrl: '',
+      setCustomDownloadUrl: (customDownloadUrl) => set({ customDownloadUrl }),
+      skinUrl: '',
+      setSkinUrl: (skinUrl) => set({ skinUrl }),
+      privacyAgreed: false,
+      setPrivacyAgreed: (privacyAgreed) => set({ privacyAgreed }),
 
       isLaunching: false,
       setIsLaunching: (isLaunching) => set({ isLaunching }),
@@ -131,6 +147,10 @@ export const useAppStore = create<AppState>()(
         downloadSource: state.downloadSource,
         gitcodeToken: state.gitcodeToken,
         autoJava: state.autoJava,
+        customUUID: state.customUUID,
+        customDownloadUrl: state.customDownloadUrl,
+        skinUrl: state.skinUrl,
+        privacyAgreed: state.privacyAgreed,
         accounts: state.accounts,
         currentAccount: state.currentAccount,
       }),

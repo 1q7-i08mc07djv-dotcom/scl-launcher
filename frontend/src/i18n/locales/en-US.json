@@ -65,7 +65,8 @@
     "downloadSource": "Download Source",
     "gitcodeToken": "GitCode Token",
     "save": "Save",
-    "reset": "Reset"
+    "reset": "Reset",
+    "about": "About"
   },
   "tools": {
     "title": "Tools",
@@ -99,6 +100,7 @@
     "info": "Info",
     "loading": "Loading...",
     "success": "Success",
-    "failed": "Failed"
+    "failed": "Failed",
+    "agree": "I have read and agree"
   }
 }

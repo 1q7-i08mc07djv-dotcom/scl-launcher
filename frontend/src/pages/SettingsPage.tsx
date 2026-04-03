@@ -14,7 +14,9 @@ const SETTING_TABS = [
   { key: 'general', label: 'settings.general' },
   { key: 'game', label: 'settings.game' },
   { key: 'download', label: 'settings.download' },
+  { key: 'account', label: 'settings.account' },
   { key: 'appearance', label: 'settings.appearance' },
+  { key: 'about', label: 'settings.about' },
 ] as const;
 
 type SettingTab = typeof SETTING_TABS[number]['key'];
@@ -42,6 +44,9 @@ export default function SettingsPage() {
     downloadSource, setDownloadSource,
     gitcodeToken, setGitcodeToken,
     autoJava, setAutoJava,
+    customUUID, setCustomUUID,
+    customDownloadUrl, setCustomDownloadUrl,
+    skinUrl, setSkinUrl,
   } = useAppStore();
 
   const [localJavaPath, setLocalJavaPath] = useState(javaPath);
@@ -55,6 +60,9 @@ export default function SettingsPage() {
   const [localDownloadSource, setLocalDownloadSource] = useState(downloadSource);
   const [localLanguage, setLocalLanguage] = useState(language);
   const [localTheme, setLocalTheme] = useState(theme);
+  const [localCustomUUID, setLocalCustomUUID] = useState(customUUID);
+  const [localCustomDownloadUrl, setLocalCustomDownloadUrl] = useState(customDownloadUrl);
+  const [localSkinUrl, setLocalSkinUrl] = useState(skinUrl);
 
   const loadConfig = useCallback(async () => {
     try {
@@ -67,9 +75,13 @@ export default function SettingsPage() {
       setLocalDownloadSource(cfg.downloadSource ?? 'BMCLAPI');
       setLocalLanguage(cfg.language ?? 'zh-CN');
       if (cfg.theme) setLocalTheme(cfg.theme as 'dark' | 'light');
+      setLocalCustomUUID(cfg.customUUID ?? '');
+      setLocalCustomDownloadUrl(cfg.customDownloadUrl ?? '');
+      setLocalSkinUrl(cfg.skinUrl ?? '');
       setJavaPath(cfg.javaPath ?? ''); setMemory(cfg.memory ?? '2G'); setJvmArgs(cfg.jvmArgs ?? '');
       setGitcodeToken(cfg.gitcodeToken ?? ''); setAutoJava(cfg.autoJava ?? true);
       setDownloadSource(cfg.downloadSource ?? 'BMCLAPI'); setLanguage(cfg.language ?? 'zh-CN');
+      setCustomUUID(cfg.customUUID ?? ''); setCustomDownloadUrl(cfg.customDownloadUrl ?? ''); setSkinUrl(cfg.skinUrl ?? '');
       i18n.changeLanguage(cfg.language ?? 'zh-CN');
     } catch (e) {
       // use defaults if backend not running
@@ -90,6 +102,9 @@ export default function SettingsPage() {
       jvmArgs: localJvmArgs,
       downloadSource: localDownloadSource,
       gitcodeToken: localGitcodeToken,
+      customUUID: localCustomUUID,
+      customDownloadUrl: localCustomDownloadUrl,
+      skinUrl: localSkinUrl,
     };
     try {
       await configApi.save(config);
@@ -102,6 +117,7 @@ export default function SettingsPage() {
     setGitcodeToken(localGitcodeToken); setAutoJava(localAutoJava);
     setDownloadSource(localDownloadSource); setLanguage(localLanguage);
     setTheme(localTheme);
+    setCustomUUID(localCustomUUID); setCustomDownloadUrl(localCustomDownloadUrl); setSkinUrl(localSkinUrl);
     i18n.changeLanguage(localLanguage);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -272,6 +288,36 @@ export default function SettingsPage() {
                 </div>
               )}
 
+              {activeTab === 'account' && (
+                <div className="space-y-4">
+                  <MyCard title="自定义 UUID">
+                    <div className="space-y-3">
+                      <MyTextBox
+                        value={localCustomUUID}
+                        onChange={(v) => setLocalCustomUUID(v)}
+                        placeholder="不填则自动生成"
+                      />
+                      <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                        自定义玩家 UUID，不填则使用随机生成的离线账户 UUID
+                      </div>
+                    </div>
+                  </MyCard>
+
+                  <MyCard title="皮肤站 URL">
+                    <div className="space-y-3">
+                      <MyTextBox
+                        value={localSkinUrl}
+                        onChange={(v) => setLocalSkinUrl(v)}
+                        placeholder="https://littleskin.cn"
+                      />
+                      <div className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                        第三方皮肤站地址，如 LittleSkin、Alexskin 等，留空使用正版皮肤
+                      </div>
+                    </div>
+                  </MyCard>
+                </div>
+              )}
+
               {activeTab === 'appearance' && (
                 <div className="space-y-4">
                   <MyCard title={t('settings.theme')}>
@@ -298,6 +344,97 @@ export default function SettingsPage() {
                       >
                         ☀️ 浅色
                       </button>
+                    </div>
+                  </MyCard>
+                </div>
+              )}
+
+              {activeTab === 'about' && (
+                <div className="space-y-4">
+                  <MyCard title="关于 SCL 启动器">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-base" style={{ color: 'var(--color-text)' }}>SCL Launcher</span>
+                        <span
+                          className="text-xs font-bold px-1.5 py-0.5 rounded"
+                          style={{ backgroundColor: 'var(--color-text)', color: 'var(--color-bg)' }}
+                        >
+                          CE
+                        </span>
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        版本 1.0.0
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        基于 React + Spring Boot 构建
+                      </div>
+                    </div>
+                  </MyCard>
+
+                  <MyCard title="开源协议">
+                    <div className="space-y-2">
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        本软件采用 <span className="font-medium" style={{ color: 'var(--color-text)' }}>GPL v3</span> 开源协议。
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        详细协议内容请参阅项目根目录 LICENSE 文件。
+                      </div>
+                    </div>
+                  </MyCard>
+
+                  <MyCard title="隐私协议">
+                    <div className="space-y-3">
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        我们高度重视您的个人隐私保护。
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        本软件不会上传您的任何个人数据。所有配置和账户信息均存储在本地。
+                      </div>
+                      <MyButton
+                        text="查看完整隐私协议"
+                        colorType="black"
+                        height={32}
+                        onClick={() => {
+                          useAppStore.getState().setPrivacyAgreed(false);
+                        }}
+                      />
+                    </div>
+                  </MyCard>
+
+                  <MyCard title="项目链接">
+                    <div className="space-y-2">
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        GitHub:{' '}
+                        <a
+                          href="https://github.com/1q7-i08mc07djv-dotcom/scl-launcher"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: 'var(--color-highlight)' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.electronAPI?.openFolder('https://github.com/1q7-i08mc07djv-dotcom/scl-launcher');
+                          }}
+                        >
+                          github.com/1q7-i08mc07djv-dotcom/scl-launcher
+                        </a>
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        GitCode:{' '}
+                        <a
+                          href="https://gitcode.com/My_CSDN_Doudou/scl-launcher"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: 'var(--color-highlight)' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.electronAPI?.openFolder('https://gitcode.com/My_CSDN_Doudou/scl-launcher');
+                          }}
+                        >
+                          gitcode.com/My_CSDN_Doudou/scl-launcher
+                        </a>
+                      </div>
                     </div>
                   </MyCard>
                 </div>

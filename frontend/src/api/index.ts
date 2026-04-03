@@ -36,6 +36,10 @@ export interface AppConfig {
   jvmArgs?: string;
   downloadSource?: string;
   gitcodeToken?: string;
+  customUUID?: string;
+  customDownloadUrl?: string;
+  skinUrl?: string;
+  privacyAgreed?: boolean;
 }
 
 // ─── Request helper ─────────────────────────────────────────

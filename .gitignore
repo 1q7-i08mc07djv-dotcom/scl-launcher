@@ -2,7 +2,6 @@
 .workbuddy/
 .vs/
 x64/
-SCL/
 dist/
 release/
 libs/
@@ -23,8 +22,8 @@ package*.bat
 start*.bat
 !frontend/start-backend.bat
 *.gradle
+build/
 *.xml
 COMPILE_ONLINE.md
 SPEC.md
 FRONTEND_README.md
-src/

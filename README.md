@@ -1,15 +1,16 @@
 # SCL Launcher
 
-一个现代化的 Minecraft 启动器，基于 PCL 社区版设计，采用前后端分离架构。
+一个现代化的 Minecraft 启动器，采用前后端分离架构。
 
 ![Java](https://img.shields.io/badge/Java-21-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
+![License](https://img.shields.io/badge/License-GPL%20v3-blue)
 
 ## 预览
 
-支持深色和浅色两种主题，设计风格参考自 PCL 社区版。
+支持深色和浅色两种主题。
 
 ## 技术栈
 
@@ -20,6 +21,7 @@
 | 前端 | Tailwind CSS | 深色/浅色主题支持 |
 | 前端 | React-i18next | 中英双语 |
 | 前端 | Zustand | 轻量状态管理 |
+| 前端 | Electron 41 | 桌面应用框架 |
 | 后端 | Spring Boot 3.2 | REST API 服务 |
 | 后端 | Java 21 | 运行环境 |
 | 后端 | OkHttp | HTTP 客户端 |
@@ -35,6 +37,25 @@
 - 🛠️ **工具箱** — 内存优化、缓存清理、进程管理等
 - 🌐 **中英双语** — 实时切换，自动记忆偏好
 - 💾 **数据持久化** — 所有配置保存在 `~/.SCL/` 目录
+- 🔒 **隐私保护** — 不上传任何个人数据，完全本地存储
+
+## 下载发布版
+
+### 单文件便携版（推荐）
+```
+frontend\release\SCL-Launcher-1.0.0-portable.exe
+```
+双击即用，无需安装。解压后自动运行后端服务和主程序。
+
+### 直接运行
+```
+frontend\dist\dist\win-unpacked\SCL Launcher.exe
+```
+
+### 压缩包
+```
+frontend\release\SCL-Launcher-1.0.0-win-unpacked.zip
+```
 
 ## 快速开始
 
@@ -68,44 +89,34 @@ npm run dev
 
 启动后访问 **http://localhost:5173**
 
-## 下载发布版
+### 从源码构建发布版
 
-> ⚠️ electron-builder 在 Windows 上因 winCodeSign 工具的 7z 归档包含 macOS 符号链接，7-Za 解压时报权限错误，导致 portable exe 打包失败。临时方案：
-
-**方式一：直接运行（推荐）**
-```
-frontend\dist\dist\win-unpacked\SCL Launcher.exe
-```
-双击即可运行，完整功能，无需安装。
-
-**方式二：压缩包**
-```
-frontend\release\SCL-Launcher-1.0.0-win.zip
-```
-解压后运行 `win-unpacked\SCL Launcher.exe`。
-
-**方式三：源码构建**
 ```batch
 cd frontend
 npm install
-npm run electron:dist
+npm run build
+node scripts/build-electron.js
+npx electron-builder --projectDir dist --win --dir
 ```
+
 构建产物输出到 `frontend\release\`。
 
 ## 项目结构
 
 ```
 scl-launcher/
-├── frontend/                    # React 前端
+├── frontend/                    # Electron 前端
 │   ├── src/
 │   │   ├── api/               # API 客户端
-│   │   ├── components/         # UI 组件
-│   │   │   ├── layout/       # 主窗口布局
-│   │   │   └── ui/           # PCL 风格组件
-│   │   ├── i18n/             # 国际化（zh-CN / en-US）
+│   │   ├── components/        # UI 组件
+│   │   │   ├── layout/        # 主窗口布局
+│   │   │   └── ui/            # 通用 UI 组件
+│   │   ├── i18n/              # 国际化（zh-CN / en-US）
 │   │   ├── pages/             # 页面组件
-│   │   └── store/            # 状态管理 + 主题
-│   └── ...
+│   │   └── store/             # 状态管理 + 主题
+│   ├── electron/               # Electron 主进程
+│   ├── scripts/                # 构建脚本
+│   └── release/                # 发布产物
 │
 ├── backend/                    # Spring Boot 后端
 │   └── src/main/java/com/scl/backend/
@@ -187,4 +198,8 @@ scl-launcher/
 
 ## 许可证
 
-本项目仅供学习和研究使用。Minecraft 是 Mojang Studios 的注册商标。
+本项目采用 **GPL v3** 开源协议，详细内容请参阅 [LICENSE](LICENSE) 文件。
+
+> 特别条款：未经项目所有者书面授权，禁止将本项目用于任何商业目的或修改开源协议。
+
+Minecraft 是 Mojang Studios 的注册商标。
