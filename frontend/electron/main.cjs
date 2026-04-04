@@ -8,26 +8,12 @@ let backendProcess = null;
 const isDev = !app.isPackaged;
 
 // In dev:   __dirname = frontend/electron/
-// In prod:  __dirname = win-unpacked/resources/app/ (or app.asar/dist/)
+// In prod:  __dirname = win-unpacked/resources/app/
 const distDir = path.join(__dirname);
 
-// exePath: win-unpacked/SCL Launcher.exe (in unpacked) or app.asar (in packaged)
-function getExeDir() {
-  return path.dirname(app.getPath('exe'));
-}
-
-// In dev:   frontend/start-backend.bat
-// In prod: same dir as main.cjs (win-unpacked/resources/app/start-backend.bat)
-function getBackendBatPath() {
-  if (isDev) {
-    return path.join(__dirname, '..', 'start-backend.bat');
-  }
-  // Packaged: next to main.cjs (same directory, alongside jar and bat)
-  return path.join(distDir, 'start-backend.bat');
-}
-
-// In dev:   backend/build/libs/scl-backend-1.0.0.jar
-// In prod: same dir as main.cjs
+// Path to backend JAR
+// Dev:   ../../../backend/build/libs/scl-backend-1.0.0.jar
+// Prod:  same dir as main.cjs (scl-backend-1.0.0.jar)
 function getBackendJarPath() {
   if (isDev) {
     return path.join(__dirname, '..', '..', 'backend', 'build', 'libs', 'scl-backend-1.0.0.jar');
@@ -37,27 +23,27 @@ function getBackendJarPath() {
 
 function startBackend() {
   if (backendProcess) return;
-  const batPath = getBackendBatPath();
   const jarPath = getBackendJarPath();
-  console.log('[SCL] Starting backend bat:', batPath);
-  console.log('[SCL] Backend jar:', jarPath);
+  console.log('[SCL] Starting backend jar:', jarPath);
 
-  // Write bat dynamically so jar path is always correct
-  try {
-    const batContent = `@echo off\ncd /d "%~dp0"\necho [SCL] Starting backend...\nstart "" javaw -jar "${jarPath}"\n`;
-    const fs = require('fs');
-    fs.writeFileSync(batPath, batContent);
+  try (const fs = require('fs')) {
+    if (!fs.existsSync(jarPath)) {
+      console.error('[SCL] Backend jar not found:', jarPath);
+      return;
+    }
   } catch (e) {
-    console.error('[SCL] Failed to write bat:', e.message);
+    console.error('[SCL] Failed to check jar:', e.message);
   }
 
   try {
-    backendProcess = spawn('cmd.exe', ['/c', 'start', '/min', '', '"' + batPath + '"'], {
+    backendProcess = spawn('javaw', ['-jar', jarPath], {
+      cwd: path.dirname(jarPath),
       detached: true,
       stdio: 'ignore',
-      windowsHide: false,
+      windowsHide: true,
     });
     backendProcess.unref();
+    console.log('[SCL] Backend started with pid:', backendProcess.pid);
   } catch (e) {
     console.error('[SCL] Failed to start backend:', e.message);
   }
@@ -113,9 +99,10 @@ ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false);
 ipcMain.handle('start-backend', () => { startBackend(); return { success: true }; });
 
 ipcMain.handle('open-folder', async (_, folderPath) => {
+  const exeDir = path.dirname(app.getPath('exe'));
   const mcPath = isDev
     ? path.join(process.env.APPDATA || '', '.minecraft')
-    : path.join(getExeDir(), '..', '..', 'AppData', 'Roaming', '.minecraft');
+    : path.join(exeDir, '..', '..', 'AppData', 'Roaming', '.minecraft');
   try {
     await shell.openPath(folderPath || mcPath);
     return { success: true };
@@ -125,9 +112,10 @@ ipcMain.handle('open-folder', async (_, folderPath) => {
 });
 
 ipcMain.handle('open-log', async () => {
+  const exeDir = path.dirname(app.getPath('exe'));
   const sclPath = isDev
     ? path.join(process.env.USERPROFILE || '', '.SCL')
-    : path.join(getExeDir(), '..', '..', 'AppData', 'Roaming', '.SCL');
+    : path.join(exeDir, '..', '..', 'AppData', 'Roaming', '.SCL');
   try {
     await shell.openPath(sclPath);
     return { success: true };
@@ -136,7 +124,7 @@ ipcMain.handle('open-log', async () => {
   }
 });
 
-// Microsoft OAuth Device Code Flow stubs
+// Microsoft OAuth stubs
 ipcMain.handle('microsoft-auth-start', async () => {
   return {
     success: false,

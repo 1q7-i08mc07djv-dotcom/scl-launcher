@@ -38,18 +38,7 @@ cpSync(join(root, 'electron', 'main.cjs'), join(distDir, 'main.cjs'));
 cpSync(join(root, 'electron', 'preload.js'), join(distDir, 'preload.js'));
 console.log('[build] Copied main.cjs, preload.js');
 
-// Copy start-backend.bat to dist/
-const batContent = `@echo off
-cd /d "%~dp0"
-echo Starting SCL Backend...
-start "" javaw -jar "%~dp0scl-backend-1.0.0.jar"
-`;
-writeFileSync(join(distDir, 'start-backend.bat'), batContent);
-console.log('[build] Created start-backend.bat');
 
-// Also update root frontend/start-backend.bat
-writeFileSync(join(root, 'start-backend.bat'), batContent);
-console.log('[build] Updated root start-backend.bat');
 
 // Create package.json in dist/ for electron-builder
 const appPkg = {
@@ -73,7 +62,6 @@ const appPkg = {
       'favicon.svg',
       'icons.svg',
       'assets',
-      'start-backend.bat',
       'scl-backend-1.0.0.jar'
     ],
     win: {
