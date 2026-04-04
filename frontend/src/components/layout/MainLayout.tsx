@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play, Rocket, Download, Settings, Wrench } from 'lucide-react';
+// Icons replaced with text symbols for reliable cross-platform rendering in Electron
 import { useAppStore } from '../../store/useAppStore';
 import type { NavTab } from '../../store/useAppStore';
 import StatusBar from '../layout/StatusBar';
@@ -14,11 +14,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { activeTab, setActiveTab, theme, setTheme } = useAppStore();
   const [version] = useState('1.0.0');
 
-  const tabs: { key: NavTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'launch', label: t('nav.launch'), icon: <Rocket size={18} /> },
-    { key: 'download', label: t('nav.download'), icon: <Download size={18} /> },
-    { key: 'settings', label: t('nav.settings'), icon: <Settings size={18} /> },
-    { key: 'tools', label: t('nav.tools'), icon: <Wrench size={18} /> },
+  const tabs: { key: NavTab; label: string; icon: string }[] = [
+    { key: 'launch', label: t('nav.launch'), icon: '>' },
+    { key: 'download', label: t('nav.download'), icon: 'v' },
+    { key: 'settings', label: t('nav.settings'), icon: '*' },
+    { key: 'tools', label: t('nav.tools'), icon: '+' },
   ];
 
   const toggleTheme = () => {
@@ -109,7 +109,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   }
                 }}
               >
-                <span style={{ display: 'flex', alignItems: 'center' }}>{tab.icon}</span>
+                <span style={{ display: 'flex', alignItems: 'center', fontWeight: 700 }}>{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -144,7 +144,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               }}
               title="启动后端服务"
             >
-              <Play size={11} />
+              <span style={{ fontWeight: 700, fontSize: 10 }}>▶</span>
               启动后端
             </button>
 
