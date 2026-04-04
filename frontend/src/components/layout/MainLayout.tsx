@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play, Rocket, Download, Settings, Wrench, Minus, X, Sun, Moon } from 'lucide-react';
+import { Play, Rocket, Download, Settings, Wrench } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { NavTab } from '../../store/useAppStore';
 import StatusBar from '../layout/StatusBar';
@@ -168,10 +168,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 cursor: 'pointer',
                 outline: 'none',
                 fontSize: 14,
+                fontFamily: 'sans-serif',
               }}
               title={theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
             >
-              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              {theme === 'dark' ? '☀' : '☾'}
             </button>
 
             {/* Minimize */}
@@ -189,12 +190,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 color: 'var(--color-text)',
                 cursor: 'pointer',
                 outline: 'none',
+                fontSize: 16,
+                fontFamily: 'sans-serif',
               }}
               title="最小化"
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
             >
-              <Minus size={14} />
+              ─
             </button>
 
             {/* Close */}
@@ -212,12 +215,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 color: 'var(--color-text)',
                 cursor: 'pointer',
                 outline: 'none',
+                fontSize: 16,
+                fontFamily: 'sans-serif',
               }}
               title="关闭"
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(239,68,68,0.8)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
             >
-              <X size={14} />
+              ✕
             </button>
           </div>
         </div>
