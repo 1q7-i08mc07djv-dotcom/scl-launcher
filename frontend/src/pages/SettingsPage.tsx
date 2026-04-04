@@ -249,27 +249,22 @@ export default function SettingsPage() {
               {activeTab === 'download' && (
                 <div className="space-y-4">
                   <MyCard title={t('settings.downloadSource')}>
-                    <div className="space-y-2">
+                    <select
+                      value={localDownloadSource}
+                      onChange={(e) => setLocalDownloadSource(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded text-sm border cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--color-card)',
+                        borderColor: 'var(--color-border)',
+                        color: 'var(--color-text)',
+                      }}
+                    >
                       {DOWNLOAD_SOURCES.map((source) => (
-                        <button
-                          key={source.key}
-                          onClick={() => setLocalDownloadSource(source.key)}
-                          className="w-full text-left px-3 py-2.5 rounded text-sm transition-colors border cursor-pointer"
-                          style={{
-                            backgroundColor: localDownloadSource === source.key
-                              ? 'color-mix(in srgb, var(--color-highlight) 20%, transparent)'
-                              : 'var(--color-card)',
-                            borderColor: localDownloadSource === source.key ? 'var(--color-highlight)' : 'var(--color-border)',
-                            color: localDownloadSource === source.key ? 'var(--color-text)' : 'var(--color-text-secondary)',
-                          }}
-                        >
-                          <div className="font-medium">{source.label}</div>
-                          <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
-                            {source.desc}
-                          </div>
-                        </button>
+                        <option key={source.key} value={source.key}>
+                          {source.label} — {source.desc}
+                        </option>
                       ))}
-                    </div>
+                    </select>
                   </MyCard>
 
                   {localDownloadSource === 'GitCode' && (
@@ -366,7 +361,7 @@ export default function SettingsPage() {
                         版本 1.0.0
                       </div>
                       <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        基于 React + Spring Boot 构建
+                        基于 React + Node.js 构建
                       </div>
                     </div>
                   </MyCard>
