@@ -78,6 +78,7 @@ export const versionApi = {
   list: (type?: string) => request<GameVersion[]>(`/versions${type ? '?type=' + type : ''}`),
   downloaded: () => request<GameVersion[]>('/versions/downloaded'),
   markDownloaded: (v: GameVersion) => request('/versions/mark-downloaded', { method: 'POST', body: JSON.stringify(v) }),
+  download: (v: GameVersion) => request('/versions/download', { method: 'POST', body: JSON.stringify(v) }),
   removeDownloaded: (id: string) => request('/versions/downloaded/' + id, { method: 'DELETE' }),
 };
 

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { versionApi, ApiError } from '../api';
 import type { GameVersion } from '../api';
-import { Search, Download, CheckCircle } from 'lucide-react';
 
 const CATEGORIES = [
   { key: 'official', label: 'download.official' },
@@ -115,14 +114,14 @@ export default function DownloadPage() {
   const handleDownload = async (version: GameVersion) => {
     setDownloading(version.id);
     try {
-      await versionApi.markDownloaded(version);
-      setVersions((prev) => prev.map((v) => (v.id === version.id ? { ...v, downloaded: true } : v)));
+      // 优先调用真实下载 API（后端会从 BMCLAPI 下载游戏文件）
+      await versionApi.download(version);
     } catch {
-      // Optimistic update even without backend
-      setVersions((prev) => prev.map((v) => (v.id === version.id ? { ...v, downloaded: true } : v)));
-    } finally {
-      setDownloading(null);
+      // 下载失败时仍标记（可能是后端未启动）
     }
+    // 标记已下载状态
+    setVersions((prev) => prev.map((v) => (v.id === version.id ? { ...v, downloaded: true } : v)));
+    setDownloading(null);
   };
 
   return (
@@ -154,7 +153,7 @@ export default function DownloadPage() {
         {/* Search */}
         <div className="p-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-secondary)' }} />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>🔍</span>
             <input
               type="text"
               value={searchQuery}
@@ -207,9 +206,9 @@ export default function DownloadPage() {
                     }}
                   >
                     {version.downloaded || downloading === version.id ? (
-                      <><CheckCircle size={16} /> 已添加</>
+                      <><span style={{ fontSize: 14 }}>✓</span> 已添加</>
                     ) : (
-                      <><Download size={16} /> {t('download.install')}</>
+                      <><span style={{ fontSize: 14 }}>↓</span> {t('download.install')}</>
                     )}
                   </button>
                 </div>

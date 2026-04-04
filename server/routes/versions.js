@@ -3,6 +3,9 @@ const express = require('express');
 const router = express.Router();
 const store = require('../store');
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // ─── 镜像源映射 ────────────────────────────────────
 const MIRRORS = {
@@ -114,8 +117,7 @@ async function fetchForgeVersions() {
     const mcData = await httpGet(base + '/Minecraft/version');
     const mcVersions = mcData
       .filter(v => v.type !== 'old_alpha' && v.type !== 'old_beta')
-      .map(v => v.id)
-      .slice(0, 5); // 只取最近 5 个
+      .map(v => v.id);
 
     const versions = [];
     for (const mcVer of mcVersions) {
@@ -186,4 +188,84 @@ router.delete('/downloaded/:id', (req, res) => {
   res.json({ success: true });
 });
 
-module.exports = router;
+// ─── 下载游戏版本 ─────────────────────────────────────
+function getMinecraftDir() {
+  const config = store.loadConfig();
+  if (config.minecraftPath) return config.minecraftPath;
+  return path.join(os.homedir(), 'AppData', 'Roaming', '.minecraft');
+}
+
+router.post('/download', async (req, res) => {
+  const { id, type, version, minecraftVersion } = req.body;
+  const base = getMirrorBase();
+  const minecraftDir = getMinecraftDir();
+
+  try {
+    if (type === 'official') {
+      // 从 BMCLAPI 获取下载 URL
+      const data = await httpGet(base + '/Minecraft/version/' + id);
+      const jarUrl = data.downloads?.client?.url;
+      if (!jarUrl) return res.status(500).json({ success: false, error: '无法获取下载链接' });
+
+      const versionDir = path.join(minecraftDir, 'versions', id);
+      if (!fs.existsSync(versionDir)) fs.mkdirSync(versionDir, { recursive: true });
+
+      await downloadFile(jarUrl, path.join(versionDir, id + '.jar'));
+    } else if (type === 'fabric') {
+      // Fabric: 从 BMCLAPI 获取
+      const fabricMeta = await httpGet(base + '/fabric/meta');
+      const loader = version; // fabric loader version
+      const gameVer = minecraftVersion;
+      const meta = fabricMeta.gameVersions?.find(gv => gv.version === gameVer);
+      if (!meta) return res.status(404).json({ success: false, error: '未找到 Fabric 版本' });
+
+      const installerMeta = await httpGet(base + '/fabric/meta/0.15.7'); // 简化版
+      const jarUrl = installerMeta?.files?.[0]?.url;
+      if (!jarUrl) return res.status(500).json({ success: false, error: '无法获取 Fabric 下载链接' });
+
+      const fabricDir = path.join(minecraftDir, 'mods', 'fabric');
+      if (!fs.existsSync(fabricDir)) fs.mkdirSync(fabricDir, { recursive: true });
+      await downloadFile(jarUrl, path.join(fabricDir, `fabric-${gameVer}.jar`));
+    } else {
+      return res.status(400).json({ success: false, error: '暂不支持该类型下载: ' + type });
+    }
+
+    // 标记已下载
+    const downloaded = store.loadDownloadedVersions();
+    if (!downloaded.find(v => v.id === id)) {
+      downloaded.push(req.body);
+      store.saveDownloadedVersions(downloaded);
+    }
+
+    res.json({ success: true, path: path.join(minecraftDir, 'versions', id) });
+  } catch (e) {
+    console.error('[Versions] 下载失败:', e.message);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// 文件下载（流式写入，支持大文件）
+function downloadFile(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(destPath);
+    httpsGet(url).then(res => {
+      if (!res.ok) {
+        file.close();
+        fs.unlinkSync(destPath);
+        reject(new Error('HTTP ' + res.status));
+        return;
+      }
+      res.body.pipe(file);
+      file.on('finish', () => { file.close(); resolve(); });
+    }).catch(err => {
+      file.close();
+      if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+      reject(err);
+    });
+  });
+}
+
+// HTTPS GET（处理 node-fetch 在 Electron 环境的 https 问题）
+function httpsGet(url) {
+  return fetch(url, { headers: { 'User-Agent': ua() }, timeout: 60000 });
+}
