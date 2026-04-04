@@ -66,6 +66,7 @@ const appPkg = {
       'server/**/*'
     ],
     win: {
+      signAndEditExecutable: false,
       target: [
         { target: 'portable', arch: ['x64'] }
       ]
