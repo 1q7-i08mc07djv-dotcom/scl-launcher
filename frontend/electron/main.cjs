@@ -1,6 +1,7 @@
 const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 let mainWindow = null;
 let backendProcess = null;
@@ -11,43 +12,68 @@ const isDev = !app.isPackaged;
 // In prod:  __dirname = win-unpacked/resources/app/
 const distDir = path.join(__dirname);
 
-// Path to backend JAR
-// Dev:   ../../../backend/build/libs/scl-backend-1.0.0.jar
-// Prod:  same dir as main.cjs (scl-backend-1.0.0.jar)
-function getBackendJarPath() {
+// ─── 后端路径：Node.js 服务器 ───────────────────────
+// Dev:   ../server/index.js (项目根目录的 server/)
+// Prod:  同目录下的 server/index.js
+function getServerPath() {
   if (isDev) {
-    return path.join(__dirname, '..', '..', 'backend', 'build', 'libs', 'scl-backend-1.0.0.jar');
+    return path.join(__dirname, '..', '..', 'server', 'index.js');
   }
-  return path.join(distDir, 'scl-backend-1.0.0.jar');
+  return path.join(distDir, 'server', 'index.js');
+}
+
+function getNodePath() {
+  // 开发环境直接用系统 node
+  if (isDev) return 'node';
+  // 打包环境：Electron 自带 node，但需要找系统 node 来运行后端
+  // 先尝试常见路径
+  const candidates = [
+    'node',
+    'C:/Program Files/nodejs/node.exe',
+    path.join(process.env.ProgramFiles || 'C:/Program Files', 'nodejs', 'node.exe')
+  ];
+  for (const c of candidates) {
+    if (c === 'node') return c; // 直接用 PATH 中的
+    if (fs.existsSync(c)) return c;
+  }
+  return 'node'; // fallback
 }
 
 function startBackend() {
   if (backendProcess) return;
-  const jarPath = getBackendJarPath();
-  console.log('[SCL] Starting backend jar:', jarPath);
+  const serverPath = getServerPath();
+  const nodePath = getNodePath();
 
-  try (const fs = require('fs')) {
-    if (!fs.existsSync(jarPath)) {
-      console.error('[SCL] Backend jar not found:', jarPath);
-      return;
-    }
-  } catch (e) {
-    console.error('[SCL] Failed to check jar:', e.message);
+  if (!fs.existsSync(serverPath)) {
+    console.error('[SCL] 后端文件未找到:', serverPath);
+    return;
   }
+
+  console.log('[SCL] 启动后端:', nodePath, serverPath);
 
   try {
-    backendProcess = spawn('javaw', ['-jar', jarPath], {
-      cwd: path.dirname(jarPath),
+    backendProcess = spawn(nodePath, [serverPath], {
+      cwd: path.dirname(serverPath),
       detached: true,
-      stdio: 'ignore',
+      stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
+
+    backendProcess.stdout.on('data', d => process.stdout.write('[Backend] ' + d));
+    backendProcess.stderr.on('data', d => process.stderr.write('[Backend] ' + d));
+
+    backendProcess.on('exit', (code) => {
+      console.log('[SCL] 后端进程退出, code:', code);
+      backendProcess = null;
+    });
+
     backendProcess.unref();
-    console.log('[SCL] Backend started with pid:', backendProcess.pid);
+    console.log('[SCL] 后端已启动, pid:', backendProcess.pid);
   } catch (e) {
-    console.error('[SCL] Failed to start backend:', e.message);
+    console.error('[SCL] 后端启动失败:', e.message);
   }
 
+  // 30秒后重置引用，允许重启
   setTimeout(() => { backendProcess = null; }, 30000);
 }
 
@@ -78,8 +104,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  createWindow();
   startBackend();
+  createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

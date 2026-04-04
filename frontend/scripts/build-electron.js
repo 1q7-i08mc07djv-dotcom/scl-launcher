@@ -7,9 +7,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
-const backendDir = join(root, '..', 'backend');
-const backendJarSrc = join(backendDir, 'build', 'libs', 'scl-backend-1.0.0.jar');
-const backendJarDst = join(distDir, 'scl-backend-1.0.0.jar');
+const serverDir = join(root, '..', 'server');
 
 console.log('[build] Preparing dist/ as electron app bundle...');
 
@@ -18,29 +16,32 @@ if (!existsSync(join(distDir, 'index.html'))) {
   process.exit(1);
 }
 
-// Build backend if jar doesn't exist
-if (!existsSync(backendJarSrc)) {
-  console.log('[build] Building backend jar...');
-  try {
-    execSync('cd "' + backendDir + '" && .\\gradlew.bat build --no-daemon', { stdio: 'inherit', windowsHide: true });
-  } catch (e) {
-    console.error('[build] Backend build failed:', e.message);
-    process.exit(1);
-  }
+// 安装 server 依赖（如果还没有 node_modules）
+if (!existsSync(join(serverDir, 'node_modules'))) {
+  console.log('[build] Installing server dependencies...');
+  execSync('npm install', { cwd: serverDir, stdio: 'inherit' });
 }
 
-// Copy backend jar to dist/
-cpSync(backendJarSrc, backendJarDst);
-console.log('[build] Copied backend jar to dist/');
+// 复制 server 目录到 dist/server/（排除 node_modules 内部的大文件，保留需要的）
+console.log('[build] Copying server/ to dist/server/...');
+cpSync(serverDir, join(distDir, 'server'), {
+  recursive: true,
+  filter: (src) => {
+    // 排除不需要的文件
+    const rel = src.replace(serverDir, '').replace(/\\/g, '/');
+    if (rel.includes('/.git')) return false;
+    if (rel.includes('/.gitignore')) return false;
+    return true;
+  }
+});
+console.log('[build] Copied server/ to dist/');
 
-// Copy electron files into dist/
+// 复制 Electron 文件到 dist/
 cpSync(join(root, 'electron', 'main.cjs'), join(distDir, 'main.cjs'));
 cpSync(join(root, 'electron', 'preload.js'), join(distDir, 'preload.js'));
 console.log('[build] Copied main.cjs, preload.js');
 
-
-
-// Create package.json in dist/ for electron-builder
+// 创建 package.json 供 electron-builder 使用
 const appPkg = {
   name: 'scl-launcher',
   productName: 'SCL Launcher',
@@ -62,7 +63,7 @@ const appPkg = {
       'favicon.svg',
       'icons.svg',
       'assets',
-      'scl-backend-1.0.0.jar'
+      'server/**/*'
     ],
     win: {
       target: [
