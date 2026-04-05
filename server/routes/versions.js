@@ -269,3 +269,5 @@ function downloadFile(url, destPath) {
 function httpsGet(url) {
   return fetch(url, { headers: { 'User-Agent': ua() }, timeout: 60000 });
 }
+
+module.exports = router;
