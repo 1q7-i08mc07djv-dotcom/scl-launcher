@@ -67,6 +67,8 @@ export interface AppState {
   setSkinUrl: (url: string) => void;
   privacyAgreed: boolean;
   setPrivacyAgreed: (agreed: boolean) => void;
+  dontRemindPrivacy: boolean;
+  setDontRemindPrivacy: (dontRemind: boolean) => void;
 
   // Launching state
   isLaunching: boolean;
@@ -128,6 +130,8 @@ export const useAppStore = create<AppState>()(
       setSkinUrl: (skinUrl) => set({ skinUrl }),
       privacyAgreed: false,
       setPrivacyAgreed: (privacyAgreed) => set({ privacyAgreed }),
+      dontRemindPrivacy: false,
+      setDontRemindPrivacy: (dontRemindPrivacy) => set({ dontRemindPrivacy }),
 
       isLaunching: false,
       setIsLaunching: (isLaunching) => set({ isLaunching }),
@@ -151,6 +155,7 @@ export const useAppStore = create<AppState>()(
         customDownloadUrl: state.customDownloadUrl,
         skinUrl: state.skinUrl,
         privacyAgreed: state.privacyAgreed,
+        dontRemindPrivacy: state.dontRemindPrivacy,
         accounts: state.accounts,
         currentAccount: state.currentAccount,
       }),

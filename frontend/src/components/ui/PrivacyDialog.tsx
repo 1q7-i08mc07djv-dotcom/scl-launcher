@@ -127,7 +127,10 @@ export default function PrivacyDialog({ onAgree }: PrivacyDialogProps) {
   const { t, i18n } = useTranslation();
   const privacyAgreed = useAppStore((s) => s.privacyAgreed);
   const setPrivacyAgreed = useAppStore((s) => s.setPrivacyAgreed);
+  const dontRemindPrivacy = useAppStore((s) => s.dontRemindPrivacy);
+  const setDontRemindPrivacy = useAppStore((s) => s.setDontRemindPrivacy);
   const [canAgree, setCanAgree] = useState(false);
+  const [dontRemind, setDontRemind] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lang = i18n.language || 'zh-CN';
   const policy = lang.startsWith('zh') ? PRIVACY_POLICY_ZH : PRIVACY_POLICY_EN;
@@ -139,11 +142,14 @@ export default function PrivacyDialog({ onAgree }: PrivacyDialogProps) {
   };
 
   const handleAgree = () => {
+    if (dontRemind) {
+      setDontRemindPrivacy(true);
+    }
     setPrivacyAgreed(true);
     onAgree();
   };
 
-  if (privacyAgreed) return null;
+  if (privacyAgreed || dontRemindPrivacy) return null;
 
   return (
     <div
@@ -191,6 +197,19 @@ export default function PrivacyDialog({ onAgree }: PrivacyDialogProps) {
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               {lang.startsWith('zh') ? '请滚动阅读完整协议' : 'Please scroll to read the full policy'}
             </span>
+          )}
+          {canAgree && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dontRemind}
+                onChange={(e) => setDontRemind(e.target.checked)}
+                className="w-4 h-4 accent-[#5D5FEF]"
+              />
+              <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                {lang.startsWith('zh') ? '不再提醒' : "Don't remind again"}
+              </span>
+            </label>
           )}
           <MyButton
             text={t('common.agree')}
